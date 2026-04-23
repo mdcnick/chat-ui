@@ -13,6 +13,7 @@ interface ConversationListItem {
 
 interface UserInfo {
 	id: string;
+	name?: string;
 	username?: string;
 	avatarUrl?: string;
 	email?: string;

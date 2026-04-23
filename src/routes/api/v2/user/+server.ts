@@ -10,6 +10,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		locals.user
 			? {
 					id: locals.user._id.toString(),
+					name: locals.user.name,
 					username: locals.user.username,
 					avatarUrl: locals.user.avatarUrl,
 					email: locals.user.email,

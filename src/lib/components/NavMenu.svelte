@@ -127,6 +127,14 @@
 	onDestroy(() => {
 		unsubscribeTheme?.();
 	});
+
+	const userLabel = $derived(user?.name || user?.username || user?.email || "Account");
+	const userSecondaryLabel = $derived(
+		user?.email && user?.email !== userLabel ? user.email : user?.username && user?.username !== userLabel
+			? user.username
+			: undefined
+	);
+	const userAvatar = $derived(user?.avatarUrl || undefined);
 </script>
 
 <div
@@ -168,53 +176,95 @@
 		<InfiniteScroll onvisible={handleVisible} />
 	{/if}
 </div>
+
+<div
+	class="rounded-r-xl border border-l-0 border-gray-100 px-3 py-3 dark:border-transparent md:mt-3 md:bg-gradient-to-l md:from-gray-50 md:dark:from-gray-800/30"
+>
+	{#if user}
+		<div
+			class="rounded-2xl border border-gray-200/80 bg-white/70 p-3 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/70"
+		>
+			<div class="flex items-center gap-3">
+				{#if userAvatar}
+					<img
+						src={userAvatar}
+						class="size-10 rounded-full border border-gray-200 object-cover dark:border-gray-600"
+						alt={userLabel}
+					/>
+				{:else}
+					<div
+						class="flex size-10 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white dark:bg-gray-100 dark:text-gray-900"
+					>
+						{userLabel.slice(0, 1).toUpperCase()}
+					</div>
+				{/if}
+				<div class="min-w-0 flex-1">
+					<div class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+						{userLabel}
+					</div>
+					{#if userSecondaryLabel}
+						<div class="truncate text-xs text-gray-500 dark:text-gray-400">
+							{userSecondaryLabel}
+						</div>
+					{/if}
+				</div>
+				{#if publicConfig.isHuggingChat && $isPro === false}
+					<a
+						href="https://huggingface.co/subscribe/pro?from=HuggingChat"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex h-[20px] items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+					>
+						<IconPro />
+						Get PRO
+					</a>
+				{:else if publicConfig.isHuggingChat && $isPro === true}
+					<span
+						class="flex h-[20px] items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+					>
+						<IconPro />
+						PRO
+					</span>
+				{/if}
+			</div>
+
+			<div class="mt-3 flex items-center gap-2">
+				<a
+					href="{base}/settings/application"
+					class="flex h-9 flex-1 items-center justify-center rounded-xl bg-gray-100 px-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+					onclick={handleNavItemClick}
+				>
+					Account
+				</a>
+				<a
+					href="{base}/logout"
+					class="flex h-9 items-center justify-center rounded-xl border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+				>
+					Log out
+				</a>
+			</div>
+		</div>
+	{:else if page.data.loginEnabled}
+		<div
+			class="rounded-2xl border border-dashed border-gray-300 bg-white/40 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-300"
+		>
+			<div class="font-medium text-gray-900 dark:text-gray-100">Sign in to sync your chats</div>
+			<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+				Access your conversations and settings across devices.
+			</div>
+			<a
+				href="{base}/login?next={encodeURIComponent(page.url.pathname + page.url.search)}"
+				class="mt-3 flex h-9 items-center justify-center rounded-xl bg-gray-900 px-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+			>
+				Continue
+			</a>
+		</div>
+	{/if}
+</div>
+
 <div
 	class="flex touch-none flex-col gap-1 rounded-r-xl border border-l-0 border-gray-100 p-3 text-sm dark:border-transparent md:mt-3 md:bg-gradient-to-l md:from-gray-50 md:dark:from-gray-800/30"
 >
-	{#if user?.username || user?.email}
-		<div
-			class="group flex h-9 items-center gap-1.5 rounded-lg pl-2 pr-2 hover:bg-gray-100 first:hover:bg-transparent sm:h-[2.08rem] dark:hover:bg-gray-700 first:dark:hover:bg-transparent"
-		>
-			<img
-				src="https://huggingface.co/api/users/{user.username}/avatar?redirect=true"
-				class="size-3.5 rounded-full border bg-gray-500 dark:border-white/40"
-				alt=""
-			/>
-			{#if publicConfig.isHuggingChat && user?.username}
-				<a
-					href="https://huggingface.co/{user.username}"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="flex flex-none shrink items-center gap-1.5 truncate pr-2 text-gray-500 hover:underline dark:text-gray-400"
-					>{user.username}</a
-				>
-			{:else}
-				<span
-					class="flex flex-none shrink items-center gap-1.5 truncate pr-2 text-gray-500 dark:text-gray-400"
-					>{user?.username || user?.email}</span
-				>
-			{/if}
-
-			{#if publicConfig.isHuggingChat && $isPro === false}
-				<a
-					href="https://huggingface.co/subscribe/pro?from=HuggingChat"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="ml-auto flex h-[20px] items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400"
-				>
-					<IconPro />
-					Get PRO
-				</a>
-			{:else if publicConfig.isHuggingChat && $isPro === true}
-				<span
-					class="ml-auto flex h-[20px] items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 dark:text-gray-400"
-				>
-					<IconPro />
-					PRO
-				</span>
-			{/if}
-		</div>
-	{/if}
 	<a
 		href="{base}/models"
 		class="flex h-9 flex-none items-center gap-1.5 rounded-lg pl-2 pr-2 text-gray-500 hover:bg-gray-100 sm:h-[2.08rem] dark:text-gray-400 dark:hover:bg-gray-700"
