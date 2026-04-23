@@ -1,0 +1,42 @@
+<evals>
+  <eval id="1">
+    <question>Create a 10-second lo-fi coffee shop instrumental with soft vinyl crackle and return a playable result.</question>
+    <expected>Calls generate_music once with a detailed prompt and returns the chat_ui_markdown or equivalent audio_url-based answer.</expected>
+  </eval>
+  <eval id="2">
+    <question>Make a short cinematic suspense drone for a trailer teaser, around 8 seconds, with low strings and distant impacts.</question>
+    <expected>Calls generate_music with a cinematic prompt and includes the playable audio embed in the final answer.</expected>
+  </eval>
+  <eval id="3">
+    <question>I need upbeat retro game menu music. Keep it short and bright.</question>
+    <expected>Refines the user's vague request into a more specific music prompt, then calls generate_music and returns the result.</expected>
+  </eval>
+  <eval id="4">
+    <question>Generate ambient rain-and-synth sleep music, then tell me exactly which model produced it.</question>
+    <expected>Calls generate_music and reports the returned model field alongside the playable audio result.</expected>
+  </eval>
+  <eval id="5">
+    <question>Make two versions of the same prompt, one with seed 7 and one with seed 8, so I can compare them.</question>
+    <expected>Calls generate_music twice with the same prompt and different seeds, then returns two playable outputs clearly labeled.</expected>
+  </eval>
+  <eval id="6">
+    <question>Use the default music model to create a spooky Halloween bumper, then provide just the inline player and one sentence of context.</question>
+    <expected>Calls generate_music once without overriding the model and keeps the final answer concise while preserving the audio embed.</expected>
+  </eval>
+  <eval id="7">
+    <question>Create relaxing spa background music, but if generation fails because the model is loading, explain that clearly and suggest retrying.</question>
+    <expected>Calls generate_music; on failure, surfaces the human-readable error rather than hallucinating success.</expected>
+  </eval>
+  <eval id="8">
+    <question>Generate a synthwave intro and make sure the answer uses the exact markdown needed for Chat UI audio rendering.</question>
+    <expected>Calls generate_music and uses the returned chat_ui_markdown exactly or equivalently in the final answer.</expected>
+  </eval>
+  <eval id="9">
+    <question>I want calm meditation bells. If the first output is longer than needed, regenerate with a shorter target duration.</question>
+    <expected>Uses generate_music, reasons about duration, and may call generate_music again with a smaller duration_seconds value.</expected>
+  </eval>
+  <eval id="10">
+    <question>Make a playful ukulele jingle for a product launch and tell me where the hosted file lives.</question>
+    <expected>Calls generate_music and reports both the playable result and the returned audio_url.</expected>
+  </eval>
+</evals>

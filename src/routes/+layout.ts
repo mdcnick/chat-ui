@@ -17,6 +17,8 @@ interface UserInfo {
 	username?: string;
 	avatarUrl?: string;
 	email?: string;
+	authProvider?: "clerk" | "legacy-oidc" | "trusted-header";
+	authSubject?: string;
 	isAdmin: boolean;
 	isEarlyAccess: boolean;
 	billing?: {
