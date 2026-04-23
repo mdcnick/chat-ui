@@ -5,6 +5,7 @@ type AppConfig = {
 	publicBaseUrl: string;
 	huggingFaceApiKey: string;
 	defaultModelId: string;
+	songGenerationSpaceId: string;
 	hfEndpointUrl?: string;
 	storageDir: string;
 };
@@ -38,6 +39,8 @@ export function loadConfig(): AppConfig {
 		publicBaseUrl: getPublicBaseUrl(port),
 		huggingFaceApiKey: required("HUGGINGFACE_API_KEY"),
 		defaultModelId: process.env.MUSIC_MODEL_ID?.trim() || "facebook/musicgen-small",
+		songGenerationSpaceId:
+			process.env.SONGGEN_SPACE_ID?.trim() || "tencent/SongGeneration",
 		hfEndpointUrl: process.env.HF_ENDPOINT_URL?.trim() || undefined,
 		storageDir: path.resolve(process.cwd(), "storage/generated"),
 	};

@@ -7,7 +7,7 @@ import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js
 import * as z from "zod/v4";
 
 import { loadConfig } from "./config.js";
-import { generateMusic } from "./music.js";
+import { SONG_GENRES, generateMusic, generateSong } from "./music.js";
 
 const config = loadConfig();
 
@@ -101,6 +101,116 @@ function createServer() {
 		}
 	);
 
+	server.registerTool(
+		"generate_song",
+		{
+			description:
+				"Generate a full song using Tencent SongGeneration's structured song format. Use this when the user wants sung lyrics, verse/chorus structure, genre steering, or an audio-prompted song continuation. Lyrics must be formatted in tagged sections like [verse], [chorus], [bridge], [intro-medium], or [outro-medium]. After calling this tool, include the returned chat_ui_markdown in the final answer so Chat UI renders an audio player.",
+			inputSchema: {
+				lyrics: z
+					.string()
+					.min(8)
+					.max(8000)
+					.describe(
+						"Structured lyrics in SongGeneration format. Separate sections by blank lines and start each section with a tag such as [verse], [chorus], [bridge], [intro-medium], [inst-short], or [outro-medium]."
+					),
+				text_prompt: z
+					.string()
+					.max(500)
+					.optional()
+					.describe(
+						"Optional song description. The live Space describes this as guidance for gender, genre, emotion, and instruments."
+					),
+				audio_prompt_url: z
+					.string()
+					.url()
+					.optional()
+					.describe(
+						"Optional public URL to an audio prompt file. When provided, the Space uses it as the prompt audio input."
+					),
+				genre: z
+					.enum(SONG_GENRES)
+					.optional()
+					.describe("Optional genre preset matching the Space's current genre selector."),
+				cfg_coefficient: z
+					.number()
+					.min(0.1)
+					.max(3)
+					.optional()
+					.describe("Optional CFG coefficient. The live Space default is 1.8."),
+				temperature: z
+					.number()
+					.min(0.1)
+					.max(2)
+					.optional()
+					.describe("Optional sampling temperature. The live Space default is 0.8."),
+			},
+			outputSchema: {
+				audio_url: z.string().url(),
+				chat_ui_markdown: z.string(),
+				mime_type: z.string(),
+				file_name: z.string(),
+				lyrics: z.string(),
+				text_prompt: z.string().optional(),
+				audio_prompt_url: z.string().url().optional(),
+				genre: z.enum(SONG_GENRES),
+				cfg_coefficient: z.number(),
+				temperature: z.number(),
+				space_id: z.string(),
+				generated_info: z.unknown().optional(),
+			},
+		},
+		async ({
+			lyrics,
+			text_prompt,
+			audio_prompt_url,
+			genre,
+			cfg_coefficient,
+			temperature,
+		}) => {
+			const result = await generateSong(config, {
+				lyrics,
+				textPrompt: text_prompt,
+				audioPromptUrl: audio_prompt_url,
+				genre,
+				cfgCoefficient: cfg_coefficient,
+				temperature,
+			});
+
+			return {
+				content: [
+					{
+						type: "text",
+						text: [
+							"Song generated successfully.",
+							`audio_url: ${result.audioUrl}`,
+							`mime_type: ${result.mimeType}`,
+							`space_id: ${result.spaceId}`,
+							`genre: ${result.genre}`,
+							"",
+							"To render an inline audio player in Chat UI, include this markdown exactly:",
+							result.chatUiMarkdown,
+						].join("\n"),
+					},
+				],
+				structuredContent: {
+					audio_url: result.audioUrl,
+					chat_ui_markdown: result.chatUiMarkdown,
+					mime_type: result.mimeType,
+					file_name: result.fileName,
+					lyrics: result.lyrics,
+					text_prompt: result.textPrompt,
+					audio_prompt_url: result.audioPromptUrl,
+					genre: result.genre,
+					cfg_coefficient: result.cfgCoefficient,
+					temperature: result.temperature,
+					space_id: result.spaceId,
+					generated_info: result.generatedInfo,
+				},
+			};
+		}
+	);
+
 	return server;
 }
 
@@ -116,6 +226,7 @@ async function main() {
 			mcpPath: "/mcp",
 			healthcheck: "/healthcheck",
 			defaultModel: config.defaultModelId,
+			songGenerationSpaceId: config.songGenerationSpaceId,
 		});
 	});
 
@@ -124,6 +235,7 @@ async function main() {
 			ok: true,
 			service: "music-gen-mcp",
 			defaultModel: config.defaultModelId,
+			songGenerationSpaceId: config.songGenerationSpaceId,
 			publicBaseUrl: config.publicBaseUrl,
 			storageDir: config.storageDir,
 		});

@@ -12,6 +12,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@gradio/client": "^1.19.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "express": "^5.1.0",
     "zod": "^3.25.76"
