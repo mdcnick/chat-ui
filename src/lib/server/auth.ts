@@ -172,7 +172,7 @@ export async function authenticateRequest(
 	cookie: Cookies,
 	url: URL,
 	isApi?: boolean
-): Promise<App.Locals & { secretSessionId: string }> {
+): Promise<App.Locals & { secretSessionId: string; clerkResponseHeaders?: Headers }> {
 	const token = cookie.get(config.COOKIE_NAME);
 
 	let email = null;
@@ -234,6 +234,7 @@ export async function authenticateRequest(
 			sessionId: synced.sessionId,
 			secretSessionId: synced.secretSessionId,
 			isAdmin: synced.user.isAdmin ?? false,
+			clerkResponseHeaders: clerkAuth.responseHeaders,
 			clerkAuth: {
 				clerkUserId: clerkAuth.clerkUserId,
 				clerkSessionId: clerkAuth.clerkSessionId,
@@ -262,7 +263,13 @@ export async function authenticateRequest(
 		);
 	}
 
-	return { user: undefined, sessionId, secretSessionId, isAdmin: false };
+	return {
+		user: undefined,
+		sessionId,
+		secretSessionId,
+		isAdmin: false,
+		clerkResponseHeaders: clerkAuth.responseHeaders,
+	};
 }
 
 export async function triggerLoginFlow({ url }: RequestEvent): Promise<Response> {

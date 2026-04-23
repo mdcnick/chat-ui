@@ -10,6 +10,7 @@ vi.mock("./clerk", () => ({
 	clerkEnabled: true,
 	clerkLoginEnabled: true,
 	clerkSignInUrl: "https://accounts.example.com/sign-in",
+	clerkSignUpUrl: "https://accounts.example.com/sign-up",
 	authenticateClerkRequest: authenticateClerkRequestMock,
 	getClerkUser: getClerkUserMock,
 	mapClerkUserProfile: (user: {
@@ -73,6 +74,7 @@ describe("authenticateRequest with Clerk", () => {
 	it("creates a Mongo user on the first authenticated request", async () => {
 		authenticateClerkRequestMock.mockResolvedValue({
 			isAuthenticated: true,
+			status: "signed-in",
 			clerkUserId: "user_test_123",
 			clerkSessionId: "sess_test_123",
 			sessionClaims: {
@@ -118,6 +120,7 @@ describe("authenticateRequest with Clerk", () => {
 	it("reuses the same Mongo user on repeat authenticated requests", async () => {
 		authenticateClerkRequestMock.mockResolvedValue({
 			isAuthenticated: true,
+			status: "signed-in",
 			clerkUserId: "user_test_123",
 			clerkSessionId: "sess_test_123",
 			sessionClaims: {
@@ -165,6 +168,7 @@ describe("authenticateRequest with Clerk", () => {
 	it("creates a Mongo user from Clerk session claims when getUser is unavailable", async () => {
 		authenticateClerkRequestMock.mockResolvedValue({
 			isAuthenticated: true,
+			status: "signed-in",
 			clerkUserId: "user_claims_only",
 			clerkSessionId: "sess_claims_only",
 			sessionClaims: {
@@ -197,5 +201,30 @@ describe("authenticateRequest with Clerk", () => {
 			name: "Claims User",
 		});
 		expect(result.user?._id.toString()).toBe(storedUser?._id.toString());
+	});
+
+	it("preserves Clerk handshake headers for SSR auth completion", async () => {
+		const clerkHeaders = new Headers({
+			location:
+				"https://picked-filly-44.accounts.dev/v1/client/handshake?redirect_url=http://localhost/",
+			"x-clerk-auth-status": "handshake",
+		});
+
+		authenticateClerkRequestMock.mockResolvedValue({
+			isAuthenticated: false,
+			status: "handshake",
+			responseHeaders: clerkHeaders,
+		});
+
+		const cookies = createCookiesMock();
+		const result = await authenticateRequest(
+			new Request("http://localhost/"),
+			cookies,
+			new URL("http://localhost/")
+		);
+
+		expect(result.user).toBeUndefined();
+		expect(result.clerkResponseHeaders?.get("location")).toBe(clerkHeaders.get("location"));
+		expect(result.clerkResponseHeaders?.get("x-clerk-auth-status")).toBe("handshake");
 	});
 });

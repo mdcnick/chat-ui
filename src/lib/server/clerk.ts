@@ -3,12 +3,15 @@ import { config } from "$lib/server/config";
 import { logger } from "$lib/server/logger";
 
 let clerkClientInstance: ClerkClient | null = null;
+export type ClerkAuthStatus = "signed-in" | "signed-out" | "handshake";
 
 export type ClerkRequestAuth = {
 	isAuthenticated: boolean;
+	status: ClerkAuthStatus;
 	clerkUserId?: string;
 	clerkSessionId?: string;
 	sessionClaims?: Record<string, unknown>;
+	responseHeaders?: Headers;
 };
 
 export function normalizeClerkUrl(value: string): string | undefined {
@@ -37,6 +40,7 @@ export function normalizeClerkUrl(value: string): string | undefined {
 export const clerkEnabled =
 	!!config.PUBLIC_CLERK_PUBLISHABLE_KEY && (!!config.CLERK_SECRET_KEY || !!config.CLERK_JWT_KEY);
 export const clerkSignInUrl = normalizeClerkUrl(config.PUBLIC_CLERK_SIGN_IN_URL);
+export const clerkSignUpUrl = normalizeClerkUrl(config.PUBLIC_CLERK_SIGN_UP_URL);
 export const clerkLoginEnabled = clerkEnabled && !!clerkSignInUrl;
 
 if (clerkEnabled && !clerkSignInUrl) {
@@ -79,33 +83,43 @@ export async function authenticateClerkRequest(
 	url: URL
 ): Promise<ClerkRequestAuth> {
 	if (!clerkEnabled) {
-		return { isAuthenticated: false };
+		return { isAuthenticated: false, status: "signed-out" };
 	}
 
 	try {
 		const requestState = await getClerkClient().authenticateRequest(request, {
 			authorizedParties: getAuthorizedParties(url),
 			jwtKey: config.CLERK_JWT_KEY || undefined,
+			signInUrl: clerkSignInUrl,
+			signUpUrl: clerkSignUpUrl,
+			afterSignInUrl: config.PUBLIC_ORIGIN || url.origin,
+			afterSignUpUrl: config.PUBLIC_ORIGIN || url.origin,
 		});
 
 		if (!requestState.isAuthenticated) {
-			return { isAuthenticated: false };
+			return {
+				isAuthenticated: false,
+				status: requestState.status,
+				responseHeaders: requestState.headers,
+			};
 		}
 
 		const auth = requestState.toAuth();
 
 		return {
 			isAuthenticated: !!auth.userId,
+			status: requestState.status,
 			clerkUserId: auth.userId ?? undefined,
 			clerkSessionId: auth.sessionId ?? undefined,
 			sessionClaims:
 				auth.sessionClaims && typeof auth.sessionClaims === "object"
 					? (auth.sessionClaims as Record<string, unknown>)
 					: undefined,
+			responseHeaders: requestState.headers,
 		};
 	} catch (error) {
 		logger.warn(error, "Failed to authenticate Clerk request");
-		return { isAuthenticated: false };
+		return { isAuthenticated: false, status: "signed-out" };
 	}
 }
 

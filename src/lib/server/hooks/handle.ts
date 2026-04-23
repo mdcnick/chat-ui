@@ -18,6 +18,16 @@ import { config, ready } from "$lib/server/config";
 
 type HandleInput = Parameters<Handle>[0];
 
+function appendHeaders(target: Headers, source: Headers | undefined) {
+	if (!source) {
+		return;
+	}
+
+	source.forEach((value, key) => {
+		target.append(key, value);
+	});
+}
+
 function getClientAddressSafe(event: RequestEvent): string | undefined {
 	try {
 		return event.getClientAddress();
@@ -78,6 +88,13 @@ export async function handleRequest({ event, resolve }: HandleInput): Promise<Re
 			const isStripeBillingWebhook =
 				event.url.pathname === `${base}/api/v2/billing/webhook` && event.request.method === "POST";
 			const auth = await authenticateRequest(event.request, event.cookies, event.url, isApi);
+			const clerkRedirectLocation = auth.clerkResponseHeaders?.get("location");
+
+			if (clerkRedirectLocation) {
+				const headers = new Headers();
+				appendHeaders(headers, auth.clerkResponseHeaders);
+				return new Response(null, { status: 307, headers });
+			}
 
 			event.locals.sessionId = auth.sessionId;
 
@@ -193,6 +210,7 @@ export async function handleRequest({ event, resolve }: HandleInput): Promise<Re
 					return header.includes("content-type");
 				},
 			});
+			appendHeaders(response.headers, auth.clerkResponseHeaders);
 
 			// Update request context with status code
 			updateRequestContext({ statusCode: response.status });
