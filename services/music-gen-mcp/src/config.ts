@@ -3,6 +3,7 @@ import path from "node:path";
 type AppConfig = {
 	port: number;
 	publicBaseUrl: string;
+	allowedHosts: string[];
 	huggingFaceApiKey: string;
 	defaultModelId: string;
 	songGenerationSpaceId: string;
@@ -28,15 +29,42 @@ function getPublicBaseUrl(port: number): string {
 	return `http://localhost:${port}`;
 }
 
+function getAllowedHosts(publicBaseUrl: string): string[] {
+	const explicit = process.env.ALLOWED_HOSTS?.trim();
+	if (explicit) {
+		return explicit
+			.split(",")
+			.map((value) => value.trim())
+			.filter(Boolean);
+	}
+
+	const hosts = new Set<string>(["localhost", "127.0.0.1", "[::1]"]);
+	try {
+		hosts.add(new URL(publicBaseUrl).hostname);
+	} catch {
+		// Ignore malformed PUBLIC_BASE_URL here; startup will fail elsewhere if needed.
+	}
+
+	const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
+	if (railwayDomain) {
+		hosts.add(railwayDomain);
+	}
+
+	return [...hosts];
+}
+
 export function loadConfig(): AppConfig {
 	const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 	if (!Number.isFinite(port) || port <= 0) {
 		throw new Error(`Invalid PORT: ${process.env.PORT}`);
 	}
 
+	const publicBaseUrl = getPublicBaseUrl(port);
+
 	return {
 		port,
-		publicBaseUrl: getPublicBaseUrl(port),
+		publicBaseUrl,
+		allowedHosts: getAllowedHosts(publicBaseUrl),
 		huggingFaceApiKey: required("HUGGINGFACE_API_KEY"),
 		defaultModelId: process.env.MUSIC_MODEL_ID?.trim() || "facebook/musicgen-small",
 		songGenerationSpaceId:

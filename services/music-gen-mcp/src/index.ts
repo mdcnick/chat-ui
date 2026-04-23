@@ -217,7 +217,7 @@ function createServer() {
 async function main() {
 	await mkdir(config.storageDir, { recursive: true });
 
-	const app = createMcpExpressApp({ host: "0.0.0.0" });
+	const app = createMcpExpressApp({ host: "0.0.0.0", allowedHosts: config.allowedHosts });
 	app.use("/media", express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" }));
 
 	app.get("/", (_req: Request, res: Response) => {
@@ -237,6 +237,7 @@ async function main() {
 			defaultModel: config.defaultModelId,
 			songGenerationSpaceId: config.songGenerationSpaceId,
 			publicBaseUrl: config.publicBaseUrl,
+			allowedHosts: config.allowedHosts,
 			storageDir: config.storageDir,
 		});
 	});
