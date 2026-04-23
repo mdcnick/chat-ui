@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
+
 import * as z from "zod/v4";
 
 import { loadConfig } from "./config.js";
@@ -217,7 +217,8 @@ function createServer() {
 async function main() {
 	await mkdir(config.storageDir, { recursive: true });
 
-	const app = createMcpExpressApp({ host: "0.0.0.0", allowedHosts: config.allowedHosts });
+	const app = express();
+	app.use(express.json());
 	app.use("/media", express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" }));
 
 	app.get("/", (_req: Request, res: Response) => {
