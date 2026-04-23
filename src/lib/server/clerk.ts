@@ -11,8 +11,39 @@ export type ClerkRequestAuth = {
 	sessionClaims?: Record<string, unknown>;
 };
 
+export function normalizeClerkUrl(value: string): string | undefined {
+	const trimmed = value.trim();
+	if (!trimmed) {
+		return undefined;
+	}
+
+	const normalized =
+		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+		(trimmed.startsWith("'") && trimmed.endsWith("'"))
+			? trimmed.slice(1, -1).trim()
+			: trimmed;
+
+	if (!normalized) {
+		return undefined;
+	}
+
+	try {
+		return new URL(normalized).toString();
+	} catch {
+		return undefined;
+	}
+}
+
 export const clerkEnabled =
 	!!config.PUBLIC_CLERK_PUBLISHABLE_KEY && (!!config.CLERK_SECRET_KEY || !!config.CLERK_JWT_KEY);
+export const clerkSignInUrl = normalizeClerkUrl(config.PUBLIC_CLERK_SIGN_IN_URL);
+export const clerkLoginEnabled = clerkEnabled && !!clerkSignInUrl;
+
+if (clerkEnabled && !clerkSignInUrl) {
+	logger.warn(
+		"Clerk is enabled but PUBLIC_CLERK_SIGN_IN_URL is missing or invalid; browser login is disabled"
+	);
+}
 
 function getAuthorizedParties(url: URL): string[] {
 	const origins = new Set<string>();

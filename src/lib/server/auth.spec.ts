@@ -8,6 +8,8 @@ const getClerkUserMock = vi.fn();
 
 vi.mock("./clerk", () => ({
 	clerkEnabled: true,
+	clerkLoginEnabled: true,
+	clerkSignInUrl: "https://accounts.example.com/sign-in",
 	authenticateClerkRequest: authenticateClerkRequestMock,
 	getClerkUser: getClerkUserMock,
 	mapClerkUserProfile: (user: {

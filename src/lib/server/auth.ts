@@ -12,6 +12,8 @@ import { adminTokenManager } from "./adminToken";
 import {
 	authenticateClerkRequest,
 	clerkEnabled,
+	clerkLoginEnabled,
+	clerkSignInUrl,
 	getClerkUser,
 	mapClerkSessionClaimsProfile,
 	mapClerkUserProfile,
@@ -50,7 +52,7 @@ const allowedUserDomains = z
 	.default([])
 	.parse(JSON5.parse(sanitizeJSONEnv(config.ALLOWED_USER_DOMAINS, "[]")));
 
-export const loginEnabled = clerkEnabled;
+export const loginEnabled = clerkLoginEnabled;
 
 function sanitizeReturnPath(path: string | undefined | null): string | undefined {
 	if (!path) {
@@ -154,9 +156,9 @@ function getSafeNext(url: URL): string {
 }
 
 function getClerkSignInTarget(next: string, url: URL) {
-	const signInUrl = config.PUBLIC_CLERK_SIGN_IN_URL;
+	const signInUrl = clerkSignInUrl;
 	if (!signInUrl) {
-		throw new Error("PUBLIC_CLERK_SIGN_IN_URL is not configured");
+		throw error(503, "Clerk login is not configured. Set PUBLIC_CLERK_SIGN_IN_URL.");
 	}
 
 	const redirectUrl = new URL(next, config.PUBLIC_ORIGIN || url.origin).toString();
