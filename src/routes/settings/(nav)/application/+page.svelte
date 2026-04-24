@@ -370,7 +370,7 @@
 			</p>
 			<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">How chat behaves</h2>
 			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-				These defaults apply across conversations unless a feature is scoped to a specific model.
+				These defaults apply across conversations in this app.
 			</p>
 		</div>
 		<div class={sectionBodyClass}>
