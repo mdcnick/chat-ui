@@ -13,6 +13,7 @@
 	import { usePublicConfig } from "$lib/utils/PublicConfig.svelte";
 	import { PROVIDERS_HUB_ORGS } from "@huggingface/inference";
 	import CarbonChevronLeft from "~icons/carbon/chevron-left";
+	import CarbonChevronDown from "~icons/carbon/chevron-down";
 	import CarbonClose from "~icons/carbon/close";
 	import CarbonTextLongParagraph from "~icons/carbon/text-long-paragraph";
 	import IconGear from "~icons/bi/gear-fill";
@@ -96,6 +97,70 @@
 	let modelFilter = $state("");
 	const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ");
 	let queryTokens = $derived(normalize(modelFilter).trim().split(/\s+/).filter(Boolean));
+
+	function getProvider(modelId: string) {
+		const slashIndex = modelId.indexOf("/");
+		return slashIndex > 0 ? modelId.slice(0, slashIndex) : modelId;
+	}
+
+	let filteredModels = $derived(
+		data.models
+			.filter((el) => !el.unlisted)
+			.filter((el) => {
+				const haystack = normalize(`${el.id} ${el.name ?? ""} ${el.displayName ?? ""}`);
+				return queryTokens.every((q) => haystack.includes(q));
+			})
+	);
+
+	let groupedModels = $derived(() => {
+		const groups = new Map<string, typeof filteredModels>();
+		for (const model of filteredModels) {
+			const provider = getProvider(model.id);
+			let list = groups.get(provider);
+			if (!list) {
+				list = [];
+				groups.set(provider, list);
+			}
+			list.push(model);
+		}
+		return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+	});
+
+	let expandedProviders = $state<Set<string>>(new Set());
+
+	function toggleProvider(provider: string) {
+		const next = new Set(expandedProviders);
+		if (next.has(provider)) {
+			next.delete(provider);
+		} else {
+			next.add(provider);
+		}
+		expandedProviders = next;
+	}
+
+	$effect(() => {
+		// Auto-expand providers that contain the currently selected model
+		const currentModelId = page.params.model as string | undefined;
+		if (currentModelId) {
+			const provider = getProvider(currentModelId);
+			if (!expandedProviders.has(provider)) {
+				const next = new Set(expandedProviders);
+				next.add(provider);
+				expandedProviders = next;
+			}
+		}
+	});
+
+	$effect(() => {
+		// Auto-expand all providers when searching
+		if (queryTokens.length > 0) {
+			const next = new Set(expandedProviders);
+			for (const [provider] of groupedModels()) {
+				next.add(provider);
+			}
+			expandedProviders = next;
+		}
+	});
 </script>
 
 <div
@@ -181,101 +246,126 @@
 				</label>
 			</div>
 
-			<div class="mt-1 flex flex-col gap-1 px-1 pb-24">
-				{#each data.models
-					.filter((el) => !el.unlisted)
-					.filter((el) => {
-						const haystack = normalize(`${el.id} ${el.name ?? ""} ${el.displayName ?? ""}`);
-						return queryTokens.every((q) => haystack.includes(q));
-					}) as model}
-					<button
-						type="button"
-						onclick={() => goto(`${base}/settings/${model.id}`)}
-						class:model-active={model.id === page.params.model}
-						class="group flex min-h-11 w-full items-center gap-2 rounded-[20px] border border-transparent px-3 py-2 text-left text-[13px] font-medium text-gray-600 transition-colors hover:border-gray-200 hover:bg-white/80 hover:text-gray-900 dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800/70 dark:hover:text-gray-100"
-						data-model-id={model.id}
-						aria-current={model.id === page.params.model ? "page" : undefined}
-						aria-label="Configure {model.displayName}"
-					>
-						<div class="mr-auto flex min-w-0 items-center gap-1.5">
-							<span class="truncate">{model.displayName}</span>
-							{#if model.isRouter}
-								<IconOmni />
-							{/if}
-						</div>
-
-						{#if publicConfig.isHuggingChat && !model.isRouter && $settings.providerOverrides?.[model.id] && $settings.providerOverrides[model.id] !== "auto"}
-							{@const providerOverride = $settings.providerOverrides[model.id]}
-							{@const hubOrg =
-								PROVIDERS_HUB_ORGS[providerOverride as keyof typeof PROVIDERS_HUB_ORGS]}
-							{#if providerOverride === "fastest"}
-								<span
-									title="Provider: {providerOverride}"
-									class="grid size-[21px] flex-none place-items-center rounded-md bg-green-500/10 text-green-600 dark:text-green-500"
-									aria-label="Provider: {providerOverride}"
-									role="img"
-								>
-									<IconFast classNames="size-3" />
-								</span>
-							{:else if providerOverride === "cheapest"}
-								<span
-									title="Provider: {providerOverride}"
-									class="grid size-[21px] flex-none place-items-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-500"
-									aria-label="Provider: {providerOverride}"
-									role="img"
-								>
-									<IconCheap classNames="size-3" />
-								</span>
-							{:else if hubOrg}
-								<span
-									title="Provider: {providerOverride}"
-									class="flex size-[21px] flex-none items-center justify-center rounded-md bg-gray-500/10 p-[0.225rem]"
-								>
-									<img
-										src="https://huggingface.co/api/avatars/{hubOrg}"
-										alt={providerOverride}
-										class="size-full rounded"
-									/>
-								</span>
-							{/if}
-						{/if}
-
-						{#if $settings.toolsOverrides?.[model.id] ?? (model as { supportsTools?: boolean }).supportsTools}
-							<span
-								title="Tool calling supported"
-								class="grid size-[21px] flex-none place-items-center rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-500"
-								aria-label="Model supports tools"
-								role="img"
-							>
-								<LucideHammer class="size-3" />
-							</span>
-						{/if}
-
-						{#if $settings.multimodalOverrides?.[model.id] ?? model.multimodal}
-							<span
-								title="Multimodal support (image inputs)"
-								class="grid size-[21px] flex-none place-items-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-500"
-								aria-label="Model is multimodal"
-								role="img"
-							>
-								<LucideImage class="size-3" />
-							</span>
-						{/if}
-
-						{#if $settings.customPrompts?.[model.id]}
-							<CarbonTextLongParagraph
-								class="size-6 rounded-md border border-gray-300 p-1 text-gray-800 dark:border-gray-600 dark:text-gray-200"
+			<div class="mt-1 flex flex-col gap-2 px-1 pb-24">
+				{#each groupedModels() as [provider, models] (provider)}
+					<div class="flex flex-col">
+						<button
+							type="button"
+							onclick={() => toggleProvider(provider)}
+							class="group flex min-h-9 w-full items-center gap-2 rounded-[16px] border border-transparent px-2.5 py-1.5 text-left text-[13px] font-semibold text-gray-700 transition-colors hover:border-gray-200 hover:bg-white/80 hover:text-gray-900 dark:text-gray-200 dark:hover:border-gray-700 dark:hover:bg-gray-800/70 dark:hover:text-gray-100"
+							aria-expanded={expandedProviders.has(provider)}
+							aria-controls="provider-{provider}-models"
+						>
+							<CarbonChevronDown
+								class="size-4 flex-none text-gray-400 transition-transform duration-200 dark:text-gray-500 {expandedProviders.has(
+									provider
+								)
+									? 'rotate-180'
+									: ''}"
 							/>
-						{/if}
-
-						{#if model.id === $settings.activeModel}
-							<div
-								class="flex h-[21px] items-center rounded-md bg-black/90 px-2 text-[11px] font-semibold leading-none text-white dark:bg-white dark:text-black"
+							<span class="truncate">{provider}</span>
+							<span
+								class="ml-auto flex-none rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-gray-700/60 dark:text-gray-400"
 							>
-								Active
+								{models.length}
+							</span>
+						</button>
+
+						{#if expandedProviders.has(provider)}
+							<div id="provider-{provider}-models" class="mt-0.5 flex flex-col gap-0.5 pl-2">
+								{#each models as model (model.id)}
+									<button
+										type="button"
+										onclick={() => goto(`${base}/settings/${model.id}`)}
+										class:model-active={model.id === page.params.model}
+										class="group flex min-h-10 w-full items-center gap-2 rounded-[16px] border border-transparent px-3 py-1.5 text-left text-[13px] font-medium text-gray-600 transition-colors hover:border-gray-200 hover:bg-white/80 hover:text-gray-900 dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800/70 dark:hover:text-gray-100"
+										data-model-id={model.id}
+										aria-current={model.id === page.params.model ? "page" : undefined}
+										aria-label="Configure {model.displayName}"
+									>
+										<div class="mr-auto flex min-w-0 items-center gap-1.5">
+											<span class="truncate">{model.displayName}</span>
+											{#if model.isRouter}
+												<IconOmni />
+											{/if}
+										</div>
+
+										{#if publicConfig.isHuggingChat && !model.isRouter && $settings.providerOverrides?.[model.id] && $settings.providerOverrides[model.id] !== "auto"}
+											{@const providerOverride = $settings.providerOverrides[model.id]}
+											{@const hubOrg =
+												PROVIDERS_HUB_ORGS[providerOverride as keyof typeof PROVIDERS_HUB_ORGS]}
+											{#if providerOverride === "fastest"}
+												<span
+													title="Provider: {providerOverride}"
+													class="grid size-[21px] flex-none place-items-center rounded-md bg-green-500/10 text-green-600 dark:text-green-500"
+													aria-label="Provider: {providerOverride}"
+													role="img"
+												>
+													<IconFast classNames="size-3" />
+												</span>
+											{:else if providerOverride === "cheapest"}
+												<span
+													title="Provider: {providerOverride}"
+													class="grid size-[21px] flex-none place-items-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-500"
+													aria-label="Provider: {providerOverride}"
+													role="img"
+												>
+													<IconCheap classNames="size-3" />
+												</span>
+											{:else if hubOrg}
+												<span
+													title="Provider: {providerOverride}"
+													class="flex size-[21px] flex-none items-center justify-center rounded-md bg-gray-500/10 p-[0.225rem]"
+												>
+													<img
+														src="https://huggingface.co/api/avatars/{hubOrg}"
+														alt={providerOverride}
+														class="size-full rounded"
+													/>
+												</span>
+											{/if}
+										{/if}
+
+										{#if $settings.toolsOverrides?.[model.id] ?? (model as { supportsTools?: boolean }).supportsTools}
+											<span
+												title="Tool calling supported"
+												class="grid size-[21px] flex-none place-items-center rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-500"
+												aria-label="Model supports tools"
+												role="img"
+											>
+												<LucideHammer class="size-3" />
+											</span>
+										{/if}
+
+										{#if $settings.multimodalOverrides?.[model.id] ?? model.multimodal}
+											<span
+												title="Multimodal support (image inputs)"
+												class="grid size-[21px] flex-none place-items-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-500"
+												aria-label="Model is multimodal"
+												role="img"
+											>
+												<LucideImage class="size-3" />
+											</span>
+										{/if}
+
+										{#if $settings.customPrompts?.[model.id]}
+											<CarbonTextLongParagraph
+												class="size-6 rounded-md border border-gray-300 p-1 text-gray-800 dark:border-gray-600 dark:text-gray-200"
+											/>
+										{/if}
+
+										{#if model.id === $settings.activeModel}
+											<div
+												class="flex h-[21px] items-center rounded-md bg-black/90 px-2 text-[11px] font-semibold leading-none text-white dark:bg-white dark:text-black"
+											>
+												Active
+											</div>
+										{/if}
+									</button>
+								{/each}
 							</div>
 						{/if}
-					</button>
+					</div>
 				{/each}
 			</div>
 
