@@ -428,6 +428,7 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 						name: id,
 						displayName: id,
 						providers: [{ provider: "opencode" }],
+						supportsTools: true,
 						endpoints: [
 							{
 								type: "openai" as const,
