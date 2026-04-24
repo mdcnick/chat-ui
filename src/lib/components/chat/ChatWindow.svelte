@@ -3,10 +3,6 @@
 	import { onDestroy, tick } from "svelte";
 
 	import IconOmni from "$lib/components/icons/IconOmni.svelte";
-	import IconCheap from "$lib/components/icons/IconCheap.svelte";
-	import IconFast from "$lib/components/icons/IconFast.svelte";
-	import CarbonCaretDown from "~icons/carbon/caret-down";
-	import { PROVIDERS_HUB_ORGS } from "@huggingface/inference";
 	import CarbonDirectionRight from "~icons/carbon/direction-right-01";
 	import IconArrowUp from "~icons/lucide/arrow-up";
 	import IconMic from "~icons/lucide/mic";
@@ -27,6 +23,7 @@
 	import SystemPromptModal from "../SystemPromptModal.svelte";
 	import ShareConversationModal from "../ShareConversationModal.svelte";
 	import ChatIntroduction from "./ChatIntroduction.svelte";
+	import ChatModelPicker from "./ChatModelPicker.svelte";
 	import UploadedFile from "./UploadedFile.svelte";
 	import { useSettingsStore } from "$lib/stores/settings";
 	import { error } from "$lib/stores/errors";
@@ -368,12 +365,6 @@
 	let modelSupportsTools = $derived(
 		($settings.toolsOverrides?.[currentModel.id] ??
 			(currentModel as unknown as { supportsTools?: boolean }).supportsTools) === true
-	);
-
-	// Get provider override for the current model (HuggingChat only)
-	let providerOverride = $derived($settings.providerOverrides?.[currentModel.id]);
-	let hasProviderOverride = $derived(
-		providerOverride && providerOverride !== "auto" && !currentModel.isRouter
 	);
 
 	// Always allow common text-like files; add images only when model is multimodal
@@ -790,48 +781,7 @@
 							</span>
 						</span>
 					{:else if !currentModel.isRouter || !loading}
-						<a
-							href="{base}/settings/{currentModel.id}"
-							onclick={(e) => {
-								if (requireAuthUser()) {
-									e.preventDefault();
-								}
-							}}
-							class="inline-flex items-center gap-1 hover:underline"
-						>
-							{#if currentModel.isRouter}
-								<IconOmni />
-								{currentModel.displayName}
-							{:else}
-								Model: {currentModel.displayName}
-								{#if hasProviderOverride}
-									{@const hubOrg =
-										PROVIDERS_HUB_ORGS[providerOverride as keyof typeof PROVIDERS_HUB_ORGS]}
-									<span
-										class="inline-flex shrink-0 items-center rounded p-0.5 {providerOverride ===
-										'fastest'
-											? 'bg-green-100 text-green-600 dark:bg-green-800/20 dark:text-green-500'
-											: providerOverride === 'cheapest'
-												? 'bg-blue-100 text-blue-600 dark:bg-blue-800/20 dark:text-blue-500'
-												: ''}"
-										title="Provider: {providerOverride}"
-									>
-										{#if providerOverride === "fastest"}
-											<IconFast classNames="text-sm" />
-										{:else if providerOverride === "cheapest"}
-											<IconCheap classNames="text-sm" />
-										{:else if hubOrg}
-											<img
-												src="https://huggingface.co/api/avatars/{hubOrg}"
-												alt={providerOverride}
-												class="size-3 flex-none rounded-sm"
-											/>
-										{/if}
-									</span>
-								{/if}
-							{/if}
-							<CarbonCaretDown class="-ml-0.5 text-xxs" />
-						</a>
+						<ChatModelPicker {models} {currentModel} disabled={loading} />
 					{:else if showRouterDetails && streamingRouterMetadata?.route}
 						<div
 							class="mr-2 flex items-center gap-1.5 whitespace-nowrap text-[.70rem] text-xs leading-none text-gray-400 dark:text-gray-400"
