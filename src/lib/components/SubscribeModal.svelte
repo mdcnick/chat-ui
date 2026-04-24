@@ -67,7 +67,11 @@
 					{/if}
 				</div>
 				<h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-					{isStripePaywallMode ? "Upgrade Required" : $isPro ? "Out of Credits" : "Upgrade Required"}
+					{isStripePaywallMode
+						? "Upgrade Required"
+						: $isPro
+							? "Out of Credits"
+							: "Upgrade Required"}
 				</h2>
 			</div>
 		</div>

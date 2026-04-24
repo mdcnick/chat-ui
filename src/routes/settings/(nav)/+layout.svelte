@@ -98,9 +98,45 @@
 	const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ");
 	let queryTokens = $derived(normalize(modelFilter).trim().split(/\s+/).filter(Boolean));
 
-	function getProvider(modelId: string) {
-		const slashIndex = modelId.indexOf("/");
-		return slashIndex > 0 ? modelId.slice(0, slashIndex) : modelId;
+	function getModelProviders(model: (typeof data.models)[0]): string[] {
+		const providers = model.providers ?? [];
+		const names = providers
+			.map((p) =>
+				typeof p === "object" && p !== null ? (p as Record<string, unknown>).provider : undefined
+			)
+			.filter((p): p is string => typeof p === "string" && p.length > 0);
+		return names.length > 0 ? names : ["Other"];
+	}
+
+	function providerDisplayName(providerId: string): string {
+		const mapping: Record<string, string> = {
+			"hf-inference": "Hugging Face",
+			"fireworks-ai": "Fireworks AI",
+			together: "Together AI",
+			sambanova: "SambaNova",
+			groq: "Groq",
+			cohere: "Cohere",
+			openai: "OpenAI",
+			novita: "Novita",
+			nebius: "Nebius",
+			hyperbolic: "Hyperbolic",
+			replicate: "Replicate",
+			"fal-ai": "Fal.ai",
+			baseten: "Baseten",
+			cerebras: "Cerebras",
+			clarifai: "Clarifai",
+			nscale: "Nscale",
+			ovhcloud: "OVHcloud",
+			publicai: "Public AI",
+			scaleway: "Scaleway",
+			wavespeed: "Wavespeed",
+			"zai-org": "Z.ai",
+			"featherless-ai": "Featherless AI",
+			"black-forest-labs": "Black Forest Labs",
+		};
+		return (
+			mapping[providerId] ?? providerId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+		);
 	}
 
 	let filteredModels = $derived(
@@ -115,13 +151,14 @@
 	let groupedModels = $derived(() => {
 		const groups = new Map<string, typeof filteredModels>();
 		for (const model of filteredModels) {
-			const provider = getProvider(model.id);
-			let list = groups.get(provider);
-			if (!list) {
-				list = [];
-				groups.set(provider, list);
+			for (const provider of getModelProviders(model)) {
+				let list = groups.get(provider);
+				if (!list) {
+					list = [];
+					groups.set(provider, list);
+				}
+				list.push(model);
 			}
-			list.push(model);
 		}
 		return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 	});
@@ -139,14 +176,21 @@
 	}
 
 	$effect(() => {
-		// Auto-expand providers that contain the currently selected model
+		// Auto-expand providers that serve the currently selected model
 		const currentModelId = page.params.model as string | undefined;
 		if (currentModelId) {
-			const provider = getProvider(currentModelId);
-			if (!expandedProviders.has(provider)) {
+			const model = data.models.find((m) => m.id === currentModelId);
+			if (model) {
+				const providers = getModelProviders(model);
 				const next = new Set(expandedProviders);
-				next.add(provider);
-				expandedProviders = next;
+				let changed = false;
+				for (const provider of providers) {
+					if (!next.has(provider)) {
+						next.add(provider);
+						changed = true;
+					}
+				}
+				if (changed) expandedProviders = next;
 			}
 		}
 	});
@@ -263,7 +307,7 @@
 									? 'rotate-180'
 									: ''}"
 							/>
-							<span class="truncate">{provider}</span>
+							<span class="truncate">{providerDisplayName(provider)}</span>
 							<span
 								class="ml-auto flex-none rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-gray-700/60 dark:text-gray-400"
 							>

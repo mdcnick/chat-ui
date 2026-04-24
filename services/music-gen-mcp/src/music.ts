@@ -140,7 +140,10 @@ async function storeAudioBuffer(
 
 function asAbsoluteUrl(value: string, baseUrl: string): string {
 	if (/^https?:\/\//i.test(value)) return value;
-	return new URL(value.replace(/^\//, ""), baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
+	return new URL(
+		value.replace(/^\//, ""),
+		baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`
+	).toString();
 }
 
 function getGradioFileUrl(file: GradioFileLike, rootUrl: string): string | null {
@@ -152,11 +155,7 @@ function getGradioFileUrl(file: GradioFileLike, rootUrl: string): string | null 
 	return null;
 }
 
-async function downloadRemoteAudio(
-	config: AppConfig,
-	file: GradioFileLike,
-	rootUrl: string
-) {
+async function downloadRemoteAudio(config: AppConfig, file: GradioFileLike, rootUrl: string) {
 	const remoteUrl = getGradioFileUrl(file, rootUrl);
 	if (!remoteUrl) {
 		throw new Error("Song generation failed: Space did not return an audio file URL.");
@@ -198,9 +197,7 @@ export async function generateMusic(
 		body: JSON.stringify({
 			inputs: input.prompt,
 			parameters: {
-				...(typeof input.durationSeconds === "number"
-					? { duration: input.durationSeconds }
-					: {}),
+				...(typeof input.durationSeconds === "number" ? { duration: input.durationSeconds } : {}),
 				...(typeof input.seed === "number" ? { seed: input.seed } : {}),
 			},
 		}),
@@ -271,7 +268,9 @@ export async function generateSong(
 	const stored = await downloadRemoteAudio(
 		config,
 		audioRef,
-		app.config?.root || app.config?.root_url || "https://huggingface.co/spaces/tencent/SongGeneration"
+		app.config?.root ||
+			app.config?.root_url ||
+			"https://huggingface.co/spaces/tencent/SongGeneration"
 	);
 
 	return {

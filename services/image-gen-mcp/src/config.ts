@@ -66,13 +66,10 @@ export function loadConfig(): AppConfig {
 		publicBaseUrl,
 		allowedHosts: getAllowedHosts(publicBaseUrl),
 		huggingFaceApiKey: required("HUGGINGFACE_API_KEY"),
-		defaultModelId:
-			process.env.DEFAULT_MODEL_ID?.trim() || "black-forest-labs/FLUX.1-schnell",
+		defaultModelId: process.env.DEFAULT_MODEL_ID?.trim() || "black-forest-labs/FLUX.1-schnell",
 		img2imgModelId:
-			process.env.IMG2IMG_MODEL_ID?.trim() ||
-			"stabilityai/stable-diffusion-xl-base-1.0",
-		editModelId:
-			process.env.EDIT_MODEL_ID?.trim() || "timbrooks/instruct-pix2pix",
+			process.env.IMG2IMG_MODEL_ID?.trim() || "stabilityai/stable-diffusion-xl-base-1.0",
+		editModelId: process.env.EDIT_MODEL_ID?.trim() || "timbrooks/instruct-pix2pix",
 		storageDir: path.resolve(process.cwd(), "storage/generated"),
 	};
 }

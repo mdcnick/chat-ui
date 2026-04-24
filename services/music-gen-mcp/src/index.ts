@@ -30,14 +30,18 @@ function createServer() {
 					.string()
 					.min(8)
 					.max(600)
-					.describe("Detailed music prompt, including mood, genre, tempo, instruments, and texture."),
+					.describe(
+						"Detailed music prompt, including mood, genre, tempo, instruments, and texture."
+					),
 				duration_seconds: z
 					.number()
 					.int()
 					.min(1)
 					.max(60)
 					.optional()
-					.describe("Optional target duration in seconds. Some models may ignore or approximate it."),
+					.describe(
+						"Optional target duration in seconds. Some models may ignore or approximate it."
+					),
 				seed: z
 					.number()
 					.int()
@@ -160,14 +164,7 @@ function createServer() {
 				generated_info: z.unknown().optional(),
 			},
 		},
-		async ({
-			lyrics,
-			text_prompt,
-			audio_prompt_url,
-			genre,
-			cfg_coefficient,
-			temperature,
-		}) => {
+		async ({ lyrics, text_prompt, audio_prompt_url, genre, cfg_coefficient, temperature }) => {
 			const result = await generateSong(config, {
 				lyrics,
 				textPrompt: text_prompt,
@@ -219,7 +216,10 @@ async function main() {
 
 	const app = express();
 	app.use(express.json());
-	app.use("/media", express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" }));
+	app.use(
+		"/media",
+		express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" })
+	);
 
 	app.get("/", (_req: Request, res: Response) => {
 		res.json({
@@ -265,8 +265,7 @@ async function main() {
 					jsonrpc: "2.0",
 					error: {
 						code: -32603,
-						message:
-							error instanceof Error ? error.message : "Internal server error",
+						message: error instanceof Error ? error.message : "Internal server error",
 					},
 					id: null,
 				});

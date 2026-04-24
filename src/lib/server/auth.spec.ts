@@ -33,10 +33,7 @@ vi.mock("./clerk", () => ({
 		email: user.primaryEmailAddress?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress,
 		avatarUrl: user.imageUrl,
 	}),
-	mapClerkSessionClaimsProfile: (
-		clerkUserId: string,
-		claims?: Record<string, unknown>
-	) => ({
+	mapClerkSessionClaimsProfile: (clerkUserId: string, claims?: Record<string, unknown>) => ({
 		authProvider: "clerk" as const,
 		authSubject: clerkUserId,
 		username:

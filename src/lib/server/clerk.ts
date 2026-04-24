@@ -170,7 +170,10 @@ function getStringClaim(
 	return undefined;
 }
 
-export function mapClerkSessionClaimsProfile(clerkUserId: string, claims?: Record<string, unknown>) {
+export function mapClerkSessionClaimsProfile(
+	clerkUserId: string,
+	claims?: Record<string, unknown>
+) {
 	const email = getStringClaim(claims, "email", "email_address");
 	const username = getStringClaim(claims, "username") ?? email?.split("@")[0] ?? undefined;
 	const name =

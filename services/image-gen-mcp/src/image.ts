@@ -136,15 +136,11 @@ export async function generateImage(
 				width,
 				height,
 				...(typeof input.seed === "number" ? { seed: input.seed } : {}),
-				...(typeof input.guidanceScale === "number"
-					? { guidance_scale: input.guidanceScale }
-					: {}),
+				...(typeof input.guidanceScale === "number" ? { guidance_scale: input.guidanceScale } : {}),
 				...(typeof input.numInferenceSteps === "number"
 					? { num_inference_steps: input.numInferenceSteps }
 					: {}),
-				...(input.negativePrompt?.trim()
-					? { negative_prompt: input.negativePrompt.trim() }
-					: {}),
+				...(input.negativePrompt?.trim() ? { negative_prompt: input.negativePrompt.trim() } : {}),
 			},
 		},
 		{ outputType: "blob" }
@@ -163,9 +159,7 @@ export async function imageToImage(
 	const parameters: Record<string, unknown> = {
 		prompt: input.prompt,
 		...(typeof input.seed === "number" ? { seed: input.seed } : {}),
-		...(typeof input.guidanceScale === "number"
-			? { guidance_scale: input.guidanceScale }
-			: {}),
+		...(typeof input.guidanceScale === "number" ? { guidance_scale: input.guidanceScale } : {}),
 		...(typeof input.numInferenceSteps === "number"
 			? { num_inference_steps: input.numInferenceSteps }
 			: {}),
@@ -182,10 +176,7 @@ export async function imageToImage(
 	return await buildImageResult(config, blob, input, model);
 }
 
-export async function editImage(
-	config: AppConfig,
-	input: EditImageInput
-): Promise<GeneratedImage> {
+export async function editImage(config: AppConfig, input: EditImageInput): Promise<GeneratedImage> {
 	const model = input.model?.trim() || config.editModelId;
 	const sourceBlob = await fetchImageBlob(input.imageUrl);
 
@@ -196,9 +187,7 @@ export async function editImage(
 		parameters: {
 			prompt: input.prompt,
 			...(typeof input.seed === "number" ? { seed: input.seed } : {}),
-			...(typeof input.guidanceScale === "number"
-				? { guidance_scale: input.guidanceScale }
-				: {}),
+			...(typeof input.guidanceScale === "number" ? { guidance_scale: input.guidanceScale } : {}),
 			...(typeof input.numInferenceSteps === "number"
 				? { num_inference_steps: input.numInferenceSteps }
 				: {}),

@@ -96,7 +96,16 @@ function createServer() {
 				seed: z.number().int().optional(),
 			},
 		},
-		async ({ prompt, width, height, seed, guidance_scale, num_inference_steps, negative_prompt, model }) => {
+		async ({
+			prompt,
+			width,
+			height,
+			seed,
+			guidance_scale,
+			num_inference_steps,
+			negative_prompt,
+			model,
+		}) => {
 			const result = await generateImage(config, {
 				prompt,
 				width,
@@ -146,17 +155,12 @@ function createServer() {
 			description:
 				"Transform an existing image based on a new text prompt. Use this for style transfer, creating variations of an image, or reimagining an image with different characteristics. Provide a public URL to the source image. After calling this tool, include the returned chat_ui_markdown in the final answer so Chat UI renders an inline image.",
 			inputSchema: {
-				image_url: z
-					.string()
-					.url()
-					.describe("Public URL to the source image to transform."),
+				image_url: z.string().url().describe("Public URL to the source image to transform."),
 				prompt: z
 					.string()
 					.min(8)
 					.max(2000)
-					.describe(
-						"Detailed prompt describing how to transform the source image."
-					),
+					.describe("Detailed prompt describing how to transform the source image."),
 				strength: z
 					.number()
 					.min(0)
@@ -248,10 +252,7 @@ function createServer() {
 			description:
 				"Edit an existing image using instruction-based editing. Use this when the user wants precise modifications like 'make it sunny', 'add a hat', 'remove the background', or 'change the color to red'. Provide a public URL to the source image. After calling this tool, include the returned chat_ui_markdown in the final answer so Chat UI renders an inline image.",
 			inputSchema: {
-				image_url: z
-					.string()
-					.url()
-					.describe("Public URL to the source image to edit."),
+				image_url: z.string().url().describe("Public URL to the source image to edit."),
 				prompt: z
 					.string()
 					.min(8)
@@ -271,7 +272,9 @@ function createServer() {
 					.min(0)
 					.max(20)
 					.optional()
-					.describe("Guidance scale. Higher values make the edit more closely follow the instruction."),
+					.describe(
+						"Guidance scale. Higher values make the edit more closely follow the instruction."
+					),
 				num_inference_steps: z
 					.number()
 					.int()
@@ -343,7 +346,10 @@ async function main() {
 
 	const app = express();
 	app.use(express.json());
-	app.use("/media", express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" }));
+	app.use(
+		"/media",
+		express.static(config.storageDir, { fallthrough: false, index: false, maxAge: "1h" })
+	);
 
 	app.get("/", (_req: Request, res: Response) => {
 		res.json({
@@ -391,8 +397,7 @@ async function main() {
 					jsonrpc: "2.0",
 					error: {
 						code: -32603,
-						message:
-							error instanceof Error ? error.message : "Internal server error",
+						message: error instanceof Error ? error.message : "Internal server error",
 					},
 					id: null,
 				});
