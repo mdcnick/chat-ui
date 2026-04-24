@@ -9,6 +9,8 @@ type AppConfig = {
 	songGenerationSpaceId: string;
 	hfEndpointUrl?: string;
 	storageDir: string;
+	googleApiKey?: string;
+	lyriaModelId: string;
 };
 
 function required(name: string): string {
@@ -70,6 +72,8 @@ export function loadConfig(): AppConfig {
 		songGenerationSpaceId: process.env.SONGGEN_SPACE_ID?.trim() || "tencent/SongGeneration",
 		hfEndpointUrl: process.env.HF_ENDPOINT_URL?.trim() || undefined,
 		storageDir: path.resolve(process.cwd(), "storage/generated"),
+		googleApiKey: process.env.GOOGLE_API_KEY?.trim() || undefined,
+		lyriaModelId: process.env.LYRIA_MODEL_ID?.trim() || "lyria-3-pro-preview",
 	};
 }
 

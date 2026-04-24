@@ -7,7 +7,13 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import * as z from "zod/v4";
 
 import { loadConfig } from "./config.js";
-import { SONG_GENRES, generateMusic, generateSong } from "./music.js";
+import {
+	SONG_GENRES,
+	generateMusic,
+	generateLyriaMusic,
+	generateSong,
+} from "./music.js";
+import { MusicGenerationMode } from "@google/genai";
 
 const config = loadConfig();
 
@@ -82,6 +88,171 @@ function createServer() {
 						type: "text",
 						text: [
 							"Music generated successfully.",
+							`audio_url: ${result.audioUrl}`,
+							`mime_type: ${result.mimeType}`,
+							`model: ${result.model}`,
+							"",
+							"To render an inline audio player in Chat UI, include this markdown exactly:",
+							result.chatUiMarkdown,
+						].join("\n"),
+					},
+				],
+				structuredContent: {
+					audio_url: result.audioUrl,
+					chat_ui_markdown: result.chatUiMarkdown,
+					mime_type: result.mimeType,
+					model: result.model,
+					file_name: result.fileName,
+					prompt: result.prompt,
+					duration_seconds: result.durationSeconds,
+					seed: result.seed,
+				},
+			};
+		}
+	);
+
+	server.registerTool(
+		"generate_lyria_music",
+		{
+			description:
+				"Generate high-quality music from a text prompt using Google's Lyria model. Use this when the user wants background music, ambience, a jingle, soundtrack, or instrumental texture with fine-grained control over musical properties. After calling this tool, include the returned chat_ui_markdown in the final answer so Chat UI renders an audio player.",
+			inputSchema: {
+				prompt: z
+					.string()
+					.min(8)
+					.max(600)
+					.describe(
+						"Detailed music prompt, including mood, genre, tempo, instruments, and texture."
+					),
+				duration_seconds: z
+					.number()
+					.int()
+					.min(1)
+					.max(120)
+					.optional()
+					.describe(
+						"Optional target duration in seconds. Lyria supports up to 120 seconds."
+					),
+				seed: z
+					.number()
+					.int()
+					.min(0)
+					.max(2_147_483_647)
+					.optional()
+					.describe("Optional deterministic seed for reproducible results."),
+				model: z
+					.enum(["lyria-3-clip-preview", "lyria-3-pro-preview"])
+					.optional()
+					.describe(
+						"Optional Lyria model override. Default is lyria-3-pro-preview."
+					),
+				temperature: z
+					.number()
+					.min(0)
+					.max(3)
+					.optional()
+					.describe("Controls variance in audio generation. Range [0.0, 3.0]. Higher values produce higher variance."),
+				top_k: z
+					.number()
+					.int()
+					.min(1)
+					.max(1000)
+					.optional()
+					.describe("Top-K sampling. Samples the topK tokens with highest probabilities. Range [1, 1000]."),
+				guidance: z
+					.number()
+					.min(0)
+					.max(6)
+					.optional()
+					.describe("Controls how closely the model follows prompts. Higher guidance follows more closely but makes transitions more abrupt. Range [0.0, 6.0]."),
+				bpm: z
+					.number()
+					.int()
+					.min(60)
+					.max(200)
+					.optional()
+					.describe("Beats per minute. Range [60, 200]."),
+				density: z
+					.number()
+					.min(0)
+					.max(1)
+					.optional()
+					.describe("Density of sounds. Range [0.0, 1.0]."),
+				brightness: z
+					.number()
+					.min(0)
+					.max(1)
+					.optional()
+					.describe("Brightness of the music. Range [0.0, 1.0]."),
+				mute_bass: z
+					.boolean()
+					.optional()
+					.describe("Whether the audio output should not contain bass."),
+				mute_drums: z
+					.boolean()
+					.optional()
+					.describe("Whether the audio output should not contain drums."),
+				only_bass_and_drums: z
+					.boolean()
+					.optional()
+					.describe("Whether the audio output should contain only bass and drums."),
+				music_generation_mode: z
+					.enum(["QUALITY", "DIVERSITY", "VOCALIZATION"])
+					.optional()
+					.describe("Generation mode: QUALITY for higher quality, DIVERSITY for more variety, VOCALIZATION for music with vocals."),
+			},
+			outputSchema: {
+				audio_url: z.string().url(),
+				chat_ui_markdown: z.string(),
+				mime_type: z.string(),
+				model: z.string(),
+				file_name: z.string(),
+				prompt: z.string(),
+				duration_seconds: z.number().int().optional(),
+				seed: z.number().int().optional(),
+			},
+		},
+		async ({
+			prompt,
+			duration_seconds,
+			seed,
+			model,
+			temperature,
+			top_k,
+			guidance,
+			bpm,
+			density,
+			brightness,
+			mute_bass,
+			mute_drums,
+			only_bass_and_drums,
+			music_generation_mode,
+		}) => {
+			const result = await generateLyriaMusic(config, {
+				prompt,
+				durationSeconds: duration_seconds,
+				seed,
+				model,
+				temperature,
+				topK: top_k,
+				guidance,
+				bpm,
+				density,
+				brightness,
+				muteBass: mute_bass,
+				muteDrums: mute_drums,
+				onlyBassAndDrums: only_bass_and_drums,
+				musicGenerationMode: music_generation_mode
+					? (MusicGenerationMode as Record<string, MusicGenerationMode>)[music_generation_mode]
+					: undefined,
+			});
+
+			return {
+				content: [
+					{
+						type: "text",
+						text: [
+							"Music generated successfully using Lyria.",
 							`audio_url: ${result.audioUrl}`,
 							`mime_type: ${result.mimeType}`,
 							`model: ${result.model}`,

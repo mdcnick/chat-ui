@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { Client, handle_file } from "@gradio/client";
+import { GoogleGenAI, Modality, MusicGenerationMode } from "@google/genai";
 
 import type { AppConfig } from "./config.js";
 
@@ -14,6 +15,34 @@ type GenerateMusicInput = {
 };
 
 type GeneratedMusic = {
+	audioUrl: string;
+	chatUiMarkdown: string;
+	mimeType: string;
+	model: string;
+	fileName: string;
+	prompt: string;
+	durationSeconds?: number;
+	seed?: number;
+};
+
+type GenerateLyriaMusicInput = {
+	prompt: string;
+	durationSeconds?: number;
+	seed?: number;
+	model?: string;
+	temperature?: number;
+	topK?: number;
+	guidance?: number;
+	bpm?: number;
+	density?: number;
+	brightness?: number;
+	muteBass?: boolean;
+	muteDrums?: boolean;
+	onlyBassAndDrums?: boolean;
+	musicGenerationMode?: MusicGenerationMode;
+};
+
+type GeneratedLyriaMusic = {
 	audioUrl: string;
 	chatUiMarkdown: string;
 	mimeType: string;
@@ -228,6 +257,82 @@ export async function generateMusic(
 	};
 }
 
+export async function generateLyriaMusic(
+	config: AppConfig,
+	input: GenerateLyriaMusicInput
+): Promise<GeneratedLyriaMusic> {
+	if (!config.googleApiKey) {
+		throw new Error("GOOGLE_API_KEY is required for Lyria music generation.");
+	}
+
+	const ai = new GoogleGenAI({ apiKey: config.googleApiKey });
+	const model = input.model?.trim() || config.lyriaModelId;
+
+	const generationConfig: Record<string, unknown> = {
+		responseModalities: [Modality.AUDIO],
+	};
+
+	if (typeof input.temperature === "number") {
+		generationConfig.temperature = input.temperature;
+	}
+	if (typeof input.topK === "number") {
+		generationConfig.topK = input.topK;
+	}
+	if (typeof input.seed === "number") {
+		generationConfig.seed = input.seed;
+	}
+	if (typeof input.guidance === "number") {
+		generationConfig.guidance = input.guidance;
+	}
+	if (typeof input.bpm === "number") {
+		generationConfig.bpm = input.bpm;
+	}
+	if (typeof input.density === "number") {
+		generationConfig.density = input.density;
+	}
+	if (typeof input.brightness === "number") {
+		generationConfig.brightness = input.brightness;
+	}
+	if (typeof input.muteBass === "boolean") {
+		generationConfig.muteBass = input.muteBass;
+	}
+	if (typeof input.muteDrums === "boolean") {
+		generationConfig.muteDrums = input.muteDrums;
+	}
+	if (typeof input.onlyBassAndDrums === "boolean") {
+		generationConfig.onlyBassAndDrums = input.onlyBassAndDrums;
+	}
+	if (input.musicGenerationMode) {
+		generationConfig.musicGenerationMode = input.musicGenerationMode;
+	}
+
+	const response = await ai.models.generateContent({
+		model: `models/${model}`,
+		contents: input.prompt,
+		config: generationConfig,
+	});
+
+	const audioData = response.data;
+	if (!audioData) {
+		throw new Error("Lyria music generation failed: no audio data returned.");
+	}
+
+	const buffer = Buffer.from(audioData, "base64");
+	const mimeType = "audio/wav";
+	const stored = await storeAudioBuffer(config, buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength), mimeType, `lyria-${Date.now()}`);
+
+	return {
+		audioUrl: stored.audioUrl,
+		chatUiMarkdown: stored.chatUiMarkdown,
+		mimeType: stored.mimeType,
+		model,
+		fileName: stored.fileName,
+		prompt: input.prompt,
+		durationSeconds: input.durationSeconds,
+		seed: input.seed,
+	};
+}
+
 function extractSongError(info: unknown): string | null {
 	if (typeof info === "string" && info.trim()) return info;
 	if (info && typeof info === "object") {
@@ -290,4 +395,12 @@ export async function generateSong(
 }
 
 export { SONG_GENRES };
-export type { GenerateMusicInput, GeneratedMusic, GenerateSongInput, GeneratedSong, SongGenre };
+export type {
+	GenerateMusicInput,
+	GeneratedMusic,
+	GenerateLyriaMusicInput,
+	GeneratedLyriaMusic,
+	GenerateSongInput,
+	GeneratedSong,
+	SongGenre,
+};
