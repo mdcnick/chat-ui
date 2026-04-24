@@ -361,16 +361,6 @@
 						{:else}
 							<span class="text-[10px] font-semibold uppercase">OC</span>
 						{/if}
-						{#if getOpencodeAvatarUrl()}
-							<img src={getOpencodeAvatarUrl()!} alt="OpenCode" class="size-5 rounded-sm" />
-						{:else}
-							<span class="text-[10px] font-semibold uppercase">OC</span>
-						{/if}
-						{#if getOpencodeAvatarUrl()}
-							<img src={getOpencodeAvatarUrl()!} alt="OpenCode" class="size-5 rounded-sm" />
-						{:else}
-							<span class="text-[10px] font-semibold uppercase">OC</span>
-						{/if}
 					</button>
 				</div>
 
