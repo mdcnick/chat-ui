@@ -254,7 +254,7 @@
 
 	// Force scroll to bottom when user sends a new message or switches conversation
 	let prevMessageCount = $state(0);
-	let prevFirstMessageId = $state(messages.at(0)?.id);
+	let prevFirstMessageId = $state<string | undefined>(undefined);
 	let forceReattach = $state(0);
 	let scrollBehavior: ScrollBehavior = $state("instant");
 	$effect(() => {

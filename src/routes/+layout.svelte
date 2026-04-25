@@ -28,15 +28,19 @@
 
 	let { data, children } = $props();
 
-	setContext("publicConfig", data.publicConfig);
+	const publicConfig = $derived(data.publicConfig);
+	$effect(() => {
+		setContext("publicConfig", publicConfig);
+	});
 
-	const publicConfig = data.publicConfig;
-	const paywallEnabled = (publicConfig.PUBLIC_PAYWALL_ENABLED || "").toLowerCase() === "true";
+	const paywallEnabled = $derived(
+		(publicConfig.PUBLIC_PAYWALL_ENABLED || "").toLowerCase() === "true"
+	);
 	const client = useAPIClient();
 
-	let conversations = $state(data.conversations);
+	let conversations = $state<typeof data.conversations>([]);
 	$effect(() => {
-		data.conversations && untrack(() => (conversations = data.conversations));
+		conversations = data.conversations;
 	});
 
 	let isNavCollapsed = $state(false);
@@ -123,7 +127,27 @@
 		}
 	});
 
-	const settings = createSettingsStore(data.settings);
+	const settings = createSettingsStore({
+		shareConversationsWithModelAuthors: false,
+		welcomeModalSeen: false,
+		welcomeModalSeenAt: null,
+		activeModel: "",
+		customPrompts: {},
+		customPromptsEnabled: {},
+		multimodalOverrides: {},
+		toolsOverrides: {},
+		hidePromptExamples: {},
+		providerOverrides: {},
+		streamingMode: "smooth",
+		directPaste: false,
+		hapticsEnabled: false,
+		billingOrganization: undefined,
+		opencodeApiKey: undefined,
+	});
+
+	$effect(() => {
+		settings.replaceFromServer(data.settings);
+	});
 
 	$effect(() => {
 		setHapticsEnabled($settings.hapticsEnabled);

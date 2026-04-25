@@ -32,6 +32,7 @@ type SettingsStoreWritable = Writable<SettingsStore> & {
 		nestedKey: string,
 		value: string | boolean
 	) => Promise<void>;
+	replaceFromServer: (settings: Omit<SettingsStore, "recentlySaved">) => void;
 };
 
 export function useSettingsStore() {
@@ -160,11 +161,19 @@ export function createSettingsStore(initialValue: Omit<SettingsStore, "recentlyS
 		}
 	}
 
+	function replaceFromServer(settings: Omit<SettingsStore, "recentlySaved">) {
+		baseStore.update((current) => ({
+			...settings,
+			recentlySaved: current.recentlySaved,
+		}));
+	}
+
 	const newStore = {
 		subscribe: baseStore.subscribe,
 		set: setSettings,
 		instantSet,
 		initValue,
+		replaceFromServer,
 		update: (fn: (s: SettingsStore) => SettingsStore) => {
 			setSettings(fn(get(baseStore)));
 		},

@@ -1,10 +1,14 @@
-import { MessageUpdateType, type MessageBrowserUpdate, type MessageUpdate } from "$lib/types/MessageUpdate";
+import { MessageUpdateType } from "$lib/types/MessageUpdate";
+import type { MessageBrowserUpdate, MessageUpdate } from "$lib/types/MessageUpdate";
 
 export interface BrowserPanelState {
 	debugUrl?: string;
 	url?: string;
 	error?: string;
 }
+
+export const IFRAME_LOAD_ERROR_MESSAGE =
+	"Couldn’t load the live browser. Try reloading or close the panel.";
 
 /**
  * Keep the client iframe attached to Steel's live debugUrl across tool-driven navigations.
@@ -43,8 +47,8 @@ export function applyBrowserUpdateState(
 
 	if (update.status === "error") {
 		return {
-			debugUrl: undefined,
-			url: update.url,
+			debugUrl: state.debugUrl ?? update.debugUrl,
+			url: update.url ?? state.url,
 			error: update.message,
 		};
 	}

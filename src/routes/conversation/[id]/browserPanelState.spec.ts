@@ -10,11 +10,13 @@ import {
 	type MessageBrowserUpdate,
 } from "$lib/types/MessageUpdate";
 
-function browserUpdate(update: Omit<MessageBrowserUpdate, "type">): MessageBrowserUpdate {
+function browserUpdate<T extends MessageBrowserUpdate["status"]>(
+	update: Omit<Extract<MessageBrowserUpdate, { status: T }>, "type">
+): Extract<MessageBrowserUpdate, { status: T }> {
 	return {
 		type: MessageUpdateType.Browser,
 		...update,
-	};
+	} as Extract<MessageBrowserUpdate, { status: T }>;
 }
 
 describe("browserPanelState", () => {
@@ -67,6 +69,29 @@ describe("browserPanelState", () => {
 
 		expect(afterNonBrowser).toEqual(errorState);
 		expect(afterClose).toEqual({ debugUrl: undefined, url: undefined, error: undefined });
+	});
+
+	it("preserves the debugUrl on browser errors so iframe retries can reuse the live session", () => {
+		const initial: BrowserPanelState = {
+			debugUrl: "https://steel.example/live/session-3",
+			url: "https://example.com/loaded",
+		};
+
+		const next = applyBrowserUpdateState(
+			initial,
+			browserUpdate({
+				status: "error",
+				debugUrl: "https://steel.example/live/session-3",
+				url: "https://example.com/loaded",
+				message: "Couldn’t load the live browser. Try reloading or close the panel.",
+			})
+		);
+
+		expect(next).toEqual({
+			debugUrl: "https://steel.example/live/session-3",
+			url: "https://example.com/loaded",
+			error: "Couldn’t load the live browser. Try reloading or close the panel.",
+		});
 	});
 
 	it("clears a browser error when a fresh open arrives", () => {

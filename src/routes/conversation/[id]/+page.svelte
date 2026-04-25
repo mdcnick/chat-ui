@@ -32,7 +32,7 @@
 	import { streamStart } from "$lib/utils/haptics";
 	import { requireAuthUser } from "$lib/utils/auth.js";
 	import { isConversationGenerationActive } from "$lib/utils/generationState";
-	import { applyBrowserPanelUpdate } from "./browserPanelState";
+	import { applyBrowserPanelUpdate, type BrowserPanelState } from "./browserPanelState";
 
 	let { data } = $props();
 
@@ -47,10 +47,9 @@
 	let files: File[] = $state([]);
 
 	// Live browser panel state (Steel)
-	let browserDebugUrl = $state<string | undefined>(undefined);
-	let browserUrl = $state<string | undefined>(undefined);
+	let browserPanelState = $state<BrowserPanelState>({});
 
-	let conversations = $state(data.conversations);
+	let conversations = $state<typeof data.conversations>([]);
 	$effect(() => {
 		conversations = data.conversations;
 	});
@@ -414,10 +413,7 @@
 						model: update.model,
 					};
 				} else if (update.type === MessageUpdateType.Browser) {
-					({ debugUrl: browserDebugUrl, url: browserUrl } = applyBrowserPanelUpdate(
-						{ debugUrl: browserDebugUrl, url: browserUrl },
-						update
-					));
+					browserPanelState = applyBrowserPanelUpdate(browserPanelState, update);
 				}
 			}
 
@@ -493,8 +489,7 @@
 
 	async function closeBrowserPanel() {
 		const conversationId = page.params.id;
-		browserDebugUrl = undefined;
-		browserUrl = undefined;
+		browserPanelState = {};
 
 		if (!conversationId) {
 			return;
@@ -558,7 +553,7 @@
 	}
 
 	const settings = useSettingsStore();
-	let messages = $state(data.messages);
+	let messages = $state<typeof data.messages>([]);
 	$effect(() => {
 		messages = data.messages;
 	});
@@ -607,8 +602,7 @@
 		$loading = false;
 		messageUpdatesAbortController.abort();
 		// Clear browser panel when leaving the conversation
-		browserDebugUrl = undefined;
-		browserUrl = undefined;
+		browserPanelState = {};
 	});
 
 	let title = $derived.by(() => {
@@ -641,13 +635,14 @@
 			currentModel={findCurrentModel(data.models, data.oldModels, data.model)}
 		/>
 	</div>
-	{#if browserDebugUrl}
+	{#if browserPanelState.debugUrl || browserPanelState.error}
 		<div
 			class="hidden h-full min-w-0 flex-1 basis-1/2 border-l border-gray-200 dark:border-gray-700 md:flex md:flex-col"
 		>
 			<BrowserPanel
-				debugUrl={browserDebugUrl}
-				url={browserUrl}
+				debugUrl={browserPanelState.debugUrl}
+				url={browserPanelState.url}
+				error={browserPanelState.error}
 				onClose={closeBrowserPanel}
 			/>
 		</div>

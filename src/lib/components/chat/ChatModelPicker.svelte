@@ -395,16 +395,25 @@
 								<div
 									role="option"
 									aria-selected={isActive}
+									tabindex={isHighlighted ? 0 : -1}
 									class="group flex w-full cursor-pointer items-start gap-2 rounded-md px-2 py-2 text-left transition-colors {isHighlighted
 										? 'bg-gray-100 dark:bg-gray-700/50'
 										: ''} {isActive
 										? 'bg-gray-50 dark:bg-gray-700/30'
 										: 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}"
 									onclick={() => selectModel(model)}
+									onkeydown={(event) => {
+										if (event.key === "Enter" || event.key === " ") {
+											event.preventDefault();
+											selectModel(model);
+										}
+									}}
+									onfocus={() => (highlightedIndex = index)}
 									onmouseenter={() => (highlightedIndex = index)}
 								>
 									<!-- Favorite star -->
-									<span
+									<button
+										type="button"
 										class="mt-0.5 flex-none opacity-0 transition-opacity group-hover:opacity-100 {favorites.has(
 											model.id
 										)
@@ -420,7 +429,7 @@
 										{:else}
 											<LucideStarOff class="size-3.5 text-gray-400 dark:text-gray-500" />
 										{/if}
-									</span>
+									</button>
 
 									<!-- Model icon -->
 									<div
