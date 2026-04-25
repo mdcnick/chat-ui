@@ -66,6 +66,11 @@
 						errorMessage = "Authentication required";
 					}
 				}
+
+				if (res.status === 401 && requireAuthUser()) {
+					return;
+				}
+
 				error.set(errorMessage);
 				console.error("Error while creating conversation: ", errorMessage);
 				return;
@@ -82,6 +87,9 @@
 			// invalidateAll to update list of conversations
 			await goto(`${base}/conversation/${conversationId}`, { invalidateAll: true });
 		} catch (err) {
+			if (err instanceof Error && err.message.includes("Failed to fetch") && requireAuthUser()) {
+				return;
+			}
 			error.set((err as Error).message || ERROR_MESSAGES.default);
 			console.error(err);
 		} finally {
