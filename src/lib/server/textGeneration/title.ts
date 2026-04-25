@@ -4,6 +4,7 @@ import { logger } from "$lib/server/logger";
 import { MessageUpdateType, type MessageUpdate } from "$lib/types/MessageUpdate";
 import type { Conversation } from "$lib/types/Conversation";
 import { getReturnFromGenerator } from "$lib/utils/getReturnFromGenerator";
+import { sanitizeGeneratedTitle } from "./titleSanitizer";
 
 export async function* generateTitleForConversation(
 	conv: Conversation,
@@ -68,16 +69,10 @@ Return only the title text.`,
 		})
 	)
 		.then((summary) => {
-			const firstFive = prompt.split(/\s+/g).slice(0, 5).join(" ");
-			const trimmed = String(summary ?? "").trim();
-			// Fallback: if empty, return first five words only (no emoji)
-			return trimmed || firstFive;
+			return sanitizeGeneratedTitle(String(summary ?? ""), prompt);
 		})
 		.catch((e) => {
 			logger.error(e, "Error generating title");
-			const firstFive = prompt.split(/\s+/g).slice(0, 5).join(" ");
-			return firstFive;
+			return sanitizeGeneratedTitle("", prompt);
 		});
 }
-
-// No post-processing: rely solely on prompt instructions above

@@ -545,12 +545,6 @@
 	const settings = useSettingsStore();
 	let messages = $state(data.messages);
 	$effect(() => {
-		console.log(
-			"[debug] data.messages length:",
-			data.messages?.length,
-			"current messages length:",
-			messages?.length
-		);
 		messages = data.messages;
 	});
 
