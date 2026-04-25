@@ -250,6 +250,23 @@ export async function authenticateRequest(
 			secretSessionId = crypto.randomUUID();
 			sessionId = await sha256(secretSessionId);
 			refreshSessionCookie(cookie, secretSessionId);
+
+			await collections.sessions.insertOne({
+				_id: new ObjectId(),
+				sessionId,
+				userId: result.user._id,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				expiresAt: addWeeks(new Date(), 2),
+			});
+
+			return {
+				user: result.user,
+				sessionId,
+				secretSessionId,
+				isAdmin: result.user.isAdmin ?? false,
+				clerkResponseHeaders: clerkAuth.responseHeaders,
+			};
 		} else if (result.invalidateSession) {
 			secretSessionId = crypto.randomUUID();
 			sessionId = await sha256(secretSessionId);
