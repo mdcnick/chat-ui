@@ -28,7 +28,7 @@
 
 	let { data, children } = $props();
 
-	const publicConfig = $derived(data.publicConfig);
+	const publicConfig = untrack(() => data.publicConfig);
 	setContext("publicConfig", publicConfig);
 
 	const paywallEnabled = $derived(
