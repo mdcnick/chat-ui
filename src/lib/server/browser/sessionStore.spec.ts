@@ -20,12 +20,12 @@ describe("BrowserSessionStore", () => {
 	});
 
 	it("reuses the same session for repeated getOrCreate calls in one conversation", async () => {
-		const createSession = vi.fn<
-			(query?: string, url?: string) => Promise<BrowserSession | null>
-		>().mockResolvedValue({
-			sessionId: "steel-session-1",
-			debugUrl: "https://debug.example/session/1",
-		});
+		const createSession = vi
+			.fn<(query?: string, url?: string) => Promise<BrowserSession | null>>()
+			.mockResolvedValue({
+				sessionId: "steel-session-1",
+				debugUrl: "https://debug.example/session/1",
+			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
 			.fn<(sessionId: string, query?: string, url?: string) => Promise<void>>()
@@ -61,12 +61,12 @@ describe("BrowserSessionStore", () => {
 
 	it("navigates an existing session without creating a new one", async () => {
 		let now = 1_000;
-		const createSession = vi.fn<
-			(query?: string, url?: string) => Promise<BrowserSession | null>
-		>().mockResolvedValue({
-			sessionId: "steel-session-2",
-			debugUrl: "https://debug.example/session/2",
-		});
+		const createSession = vi
+			.fn<(query?: string, url?: string) => Promise<BrowserSession | null>>()
+			.mockResolvedValue({
+				sessionId: "steel-session-2",
+				debugUrl: "https://debug.example/session/2",
+			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
 			.fn<(sessionId: string, query?: string, url?: string) => Promise<void>>()
@@ -88,11 +88,7 @@ describe("BrowserSessionStore", () => {
 		expect(navigated?.sessionId).toBe(created?.sessionId);
 		expect(createSession).toHaveBeenCalledTimes(1);
 		expect(navigateSession).toHaveBeenCalledTimes(1);
-		expect(navigateSession).toHaveBeenCalledWith(
-			"steel-session-2",
-			"steel browser",
-			undefined
-		);
+		expect(navigateSession).toHaveBeenCalledWith("steel-session-2", "steel browser", undefined);
 		expect(store.get("conv-2")?.lastUsedAt).toBe(2_500);
 		expect(loggerDebug).toHaveBeenCalledWith(
 			{ conversationId: "conv-2", sessionId: "steel-session-2" },
@@ -102,15 +98,15 @@ describe("BrowserSessionStore", () => {
 
 	it("releases a stored session once and allows a fresh session afterward", async () => {
 		let createdCount = 0;
-		const createSession = vi.fn<
-			(query?: string, url?: string) => Promise<BrowserSession | null>
-		>().mockImplementation(async () => {
-			createdCount += 1;
-			return {
-				sessionId: `steel-session-${createdCount}`,
-				debugUrl: `https://debug.example/session/${createdCount}`,
-			};
-		});
+		const createSession = vi
+			.fn<(query?: string, url?: string) => Promise<BrowserSession | null>>()
+			.mockImplementation(async () => {
+				createdCount += 1;
+				return {
+					sessionId: `steel-session-${createdCount}`,
+					debugUrl: `https://debug.example/session/${createdCount}`,
+				};
+			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
 			.fn<(sessionId: string, query?: string, url?: string) => Promise<void>>()
@@ -149,9 +145,7 @@ describe("BrowserSessionStore", () => {
 	});
 
 	it("returns false when release is requested without a stored session", async () => {
-		const createSession = vi.fn<
-			(query?: string, url?: string) => Promise<BrowserSession | null>
-		>();
+		const createSession = vi.fn<(query?: string, url?: string) => Promise<BrowserSession | null>>();
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
 			.fn<(sessionId: string, query?: string, url?: string) => Promise<void>>()
@@ -179,15 +173,15 @@ describe("BrowserSessionStore", () => {
 	it("releases idle sessions through cleanupExpired", async () => {
 		let now = 0;
 		let createdCount = 0;
-		const createSession = vi.fn<
-			(query?: string, url?: string) => Promise<BrowserSession | null>
-		>().mockImplementation(async () => {
-			createdCount += 1;
-			return {
-				sessionId: `steel-session-${createdCount}`,
-				debugUrl: `https://debug.example/session/${createdCount}`,
-			};
-		});
+		const createSession = vi
+			.fn<(query?: string, url?: string) => Promise<BrowserSession | null>>()
+			.mockImplementation(async () => {
+				createdCount += 1;
+				return {
+					sessionId: `steel-session-${createdCount}`,
+					debugUrl: `https://debug.example/session/${createdCount}`,
+				};
+			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
 			.fn<(sessionId: string, query?: string, url?: string) => Promise<void>>()

@@ -5,6 +5,7 @@
 ## Naming Patterns
 
 **Files:**
+
 - TypeScript modules: `camelCase.ts` — e.g. `src/lib/server/api/utils/resolveConversation.ts`, `src/lib/server/logger.ts`, `src/lib/utils/marked.ts`.
 - Svelte components: `PascalCase.svelte` — e.g. `src/lib/components/chat/ChatMessage.svelte`, `src/lib/components/chat/MarkdownRenderer.svelte`, `src/lib/components/chat/ChatModelPicker.svelte`.
 - Test files mirror their subject and use `*.spec.ts` for server/util suites and `*.svelte.test.ts` for component browser suites — e.g. `marked.ts` -> `marked.spec.ts`, `MarkdownRenderer.svelte` -> `MarkdownRenderer.svelte.test.ts`.
@@ -12,6 +13,7 @@
 - Test helpers and shared test data live in `__tests__/` directories at the appropriate level — e.g. `src/lib/server/api/__tests__/testHelpers.ts`.
 
 **Functions:**
+
 - `camelCase` for ordinary functions and methods. Examples: `resolveConversation`, `requireAuth`, `superjsonResponse`, `pickToolsCapableModel`, `sanitizeGeneratedTitle`, `createTestUser`, `cleanupTestData`.
 - `PascalCase` only for classes (e.g. `AbortRegistry`) and Svelte components.
 - Boolean predicates use `is*` / `has*` / `can*`: `isMessageToolUpdate`, `isAssistantGenerationTerminal`, `isConversationGenerationActive`, `canUseHermesTools`.
@@ -19,16 +21,19 @@
 - Hook-like store accessors begin with `use*`: `useSettingsStore` (in `src/lib/stores/settings.ts`), `usePublicConfig`.
 
 **Variables:**
+
 - Local variables and parameters: `camelCase`. Constants for env-derived data are `SCREAMING_SNAKE_CASE` and pulled from typed config (`config.LLM_ROUTER_HERMES_MODEL`, `CONV_NUM_PER_PAGE`).
 - Private/unused parameters prefixed with `_` so the lint rule ignores them — `argsIgnorePattern: "^_"` in `.eslintrc.cjs`. Example in `src/lib/components/chat/ChatMessage.svelte`: `let { isAuthor: _isAuthor = true, readOnly: _readOnly = false, ... } = $props();`.
 
 **Types:**
+
 - Type aliases and interfaces: `PascalCase` — `Conversation`, `Message`, `User`, `Model`, `Settings`, `App.Locals`, `RequestHandler`, `RouterFollowUp`.
 - Component prop interfaces are local and named `Props`: `interface Props { ... }` followed by `let { ... }: Props = $props();` (see `ChatModelPicker.svelte`, `ChatWindow.svelte`, `ChatMessage.svelte`).
 
 ## Code Style
 
 **Formatting:** Prettier (`prettier@^3.5.3`) via `.prettierrc`:
+
 - `"useTabs": true` — tabs, not spaces.
 - `"trailingComma": "es5"`.
 - `"printWidth": 100`.
@@ -36,6 +41,7 @@
 - Run `npm run format` to apply, `npm run lint` to verify (which runs `prettier --check . && eslint .`).
 
 **Linting:** ESLint (`eslint@^8.28.0`) via `.eslintrc.cjs`. Extends `eslint:recommended`, `plugin:@typescript-eslint/recommended`, `plugin:svelte/recommended`, `prettier`. Hard rules:
+
 - `@typescript-eslint/no-explicit-any: error` — never use `any`. Prefer `unknown` and narrow, or `as never` only when forced (see test files passing `{ locals, url } as never` to `RequestHandler`s).
 - `@typescript-eslint/no-non-null-assertion: error` — never use `!`. Use optional chaining and explicit guards instead (see `locals.user?._id` in `requireAuth.ts`).
 - `@typescript-eslint/no-unused-vars: error` with `argsIgnorePattern: "^_"`.
@@ -47,6 +53,7 @@
 ## Import Organization
 
 **Order (observed in `src/lib/components/chat/ChatWindow.svelte`, `src/routes/api/v2/conversations/+server.ts`):**
+
 1. SvelteKit framework imports (`@sveltejs/kit`, `svelte`, `svelte/store`, `svelte/transition`).
 2. SvelteKit module aliases (`$app/environment`, `$app/navigation`, `$app/paths`, `$app/state`).
 3. Project alias imports (`$lib/...`).
@@ -55,6 +62,7 @@
 6. Relative imports (`./Foo.svelte`, `../Bar.svelte`).
 
 **Path Aliases:**
+
 - `$lib` -> `src/lib` (used everywhere: `$lib/server/database`, `$lib/types/Message`, `$lib/stores/settings`, `$lib/utils/...`).
 - `$app/*` — SvelteKit built-ins (`$app/environment`, `$app/navigation`, `$app/paths`, `$app/state`).
 - `$env/dynamic/private`, `$env/dynamic/public` — SvelteKit env (mocked in test setup).
@@ -106,6 +114,7 @@ try {
 ## Logging
 
 **Framework:** `pino` via `src/lib/server/logger.ts`. Use `import { logger } from "$lib/server/logger"`.
+
 - In `dev` mode, transports through `pino-pretty` for colorized console output.
 - Level controlled by `config.LOG_LEVEL`, defaults to `"info"`.
 - `mixin()` automatically enriches every log line with `request_id`, `url`, `ip`, `user`, `status_code` from `getRequestContext()` (request-scoped).
@@ -114,7 +123,8 @@ try {
 
 ## Comments
 
-**When to Comment:** Comments document non-obvious behavior, business rules, and the *why* — not the *what*. Examples:
+**When to Comment:** Comments document non-obvious behavior, business rules, and the _why_ — not the _what_. Examples:
+
 - `src/lib/server/api/utils/resolveConversation.ts` documents shared-link semantics (`// shared link of length 7`).
 - `src/routes/api/v2/conversations/+server.ts` notes legacy fields kept for iOS clients (`id: conv._id, // legacy param iOS`).
 - `src/lib/utils/tree/treeHelpers.spec.ts` uses ASCII tree diagrams to explain fixture shapes.
@@ -135,11 +145,13 @@ Avoid `// TODO` without an owner; prefer issues. Avoid restating types — TypeS
 **Size:** Small, single-purpose functions. `requireAuth` (4 lines), `superjsonResponse` (10 lines), `resolveModel` (~25 lines). `resolveConversation` reaches ~70 lines because it inlines two related lookup paths; in practice modules stay well under 200 lines.
 
 **Parameters:**
+
 - 0–3 positional params is the norm (`requireAuth(locals)`, `resolveConversation(id, locals, fromShare?)`).
 - Once you exceed 3 params or need optional fields, accept an options object: `upsertEntitlementFromStripeSubscription({ userId, stripeCustomerId, stripeSubscriptionId, ... })`.
 - Never spread untyped objects — destructure with explicit type annotations on the destructure target.
 
 **Return Values:**
+
 - Endpoint handlers return `Response`. Internal services return plain TS objects/promises.
 - Avoid throwing for control flow except via `error(...)` (which is the SvelteKit-blessed mechanism for HTTP error short-circuits).
 - Prefer narrow return types — projection-typed Mongo finds (`.project<Pick<Conversation, "_id" | "title" | ...>>(...)` in `routes/api/v2/conversations/+server.ts`).
@@ -158,9 +170,7 @@ Avoid `// TODO` without an owner; prefer issues. Avoid restating types — TypeS
 
 ```svelte
 <!-- src/lib/components/chat/ChatModelPicker.svelte -->
-let rootEl: HTMLDivElement | undefined = $state();
-let isOpen = $state(false);
-let modelFilter = $state("");
+let rootEl: HTMLDivElement | undefined = $state(); let isOpen = $state(false); let modelFilter = $state("");
 let queryTokens = $derived(normalize(modelFilter).trim().split(/\s+/).filter(Boolean));
 ```
 
@@ -190,6 +200,7 @@ let {
 When a prop is intentionally unused but kept for API compatibility, alias it with a leading underscore: `isAuthor: _isAuthor = true` (see `ChatMessage.svelte`).
 
 **Stores:** Live in `src/lib/stores/`. Two patterns coexist:
+
 - **Plain writable stores** — `errors.ts`, `loading.ts`, `pendingMessage.ts`, `shareModal.ts` etc. exported as singletons via `writable(...)`.
 - **Context-scoped factories** — for stores that need per-page state (settings, MCP servers), the module exports `createXStore()` that calls `setContext(...)` and a `useXStore()` accessor that calls `getContext(...)`. See `src/lib/stores/settings.ts`:
 
@@ -205,4 +216,5 @@ Reactive state local to a single component should use `$state` rather than a sto
 **Side Effects:** Use `$effect(...)` for DOM and async side effects. Use `tick()` from `svelte` when you need to read the DOM after a state change in the same task.
 
 ---
-*Convention analysis: 2026-04-25*
+
+_Convention analysis: 2026-04-25_

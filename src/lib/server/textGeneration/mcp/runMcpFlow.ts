@@ -711,13 +711,14 @@ export async function* runMcpFlow({
 					const url = typeof args.url === "string" ? args.url : undefined;
 					const resolvedUrl =
 						url ??
-						(query
-							? `https://www.google.com/search?q=${encodeURIComponent(query)}`
-							: undefined);
+						(query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : undefined);
 					const existingSession = browserSessionStore.get(conversationId);
 
 					if (existingSession) {
-						const reusedSession = await browserSessionStore.navigate(conversationId, { query, url });
+						const reusedSession = await browserSessionStore.navigate(conversationId, {
+							query,
+							url,
+						});
 						if (reusedSession) {
 							yield {
 								type: MessageUpdateType.Browser,
@@ -742,7 +743,12 @@ export async function* runMcpFlow({
 							};
 						} else {
 							logger.warn(
-								{ conversationId, toolName: matchingCall.name, hasQuery: Boolean(query), hasUrl: Boolean(url) },
+								{
+									conversationId,
+									toolName: matchingCall.name,
+									hasQuery: Boolean(query),
+									hasUrl: Boolean(url),
+								},
 								"[mcp] failed to create browser session for panel open"
 							);
 							yield {

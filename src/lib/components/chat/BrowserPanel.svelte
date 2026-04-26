@@ -9,7 +9,8 @@
 		onClose: () => void;
 	}
 
-	const IFRAME_LOAD_ERROR_MESSAGE = "Couldn’t load the live browser. Try reloading or close the panel.";
+	const IFRAME_LOAD_ERROR_MESSAGE =
+		"Couldn’t load the live browser. Try reloading or close the panel.";
 
 	let { debugUrl, url, error, onClose }: Props = $props();
 

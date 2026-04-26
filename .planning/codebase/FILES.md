@@ -12,12 +12,14 @@
 ## Route Surface
 
 ### App pages
+
 - `src/routes/+page.svelte` — home page.
 - `src/routes/+layout.svelte` / `src/routes/+layout.ts` — global shell, initial data loading.
 - `src/routes/+error.svelte` — global error UI.
 - `src/routes/privacy/+page.svelte` — privacy page.
 
 ### Conversation flow
+
 - `src/routes/conversation/+server.ts` — create/import conversation.
 - `src/routes/conversation/[id]/+page.svelte` — main chat page UI.
 - `src/routes/conversation/[id]/+page.ts` — chat page loader.
@@ -28,6 +30,7 @@
 - `src/routes/r/[id]/+page.ts` — shared conversation loader.
 
 ### Models and settings
+
 - `src/routes/models/+page.svelte` — model listing UI.
 - `src/routes/models/[...model]/+page.svelte` / `+page.ts` — model detail page.
 - `src/routes/models/[...model]/thumbnail.png/+server.ts` — OG thumbnail generation.
@@ -39,6 +42,7 @@
 - `src/routes/settings/(nav)/[...model]/+page.svelte` / `+page.ts` — model settings UI.
 
 ### Auth and session
+
 - `src/routes/login/+server.ts` — login start.
 - `src/routes/login/callback/+server.ts` — login callback.
 - `src/routes/login/callback/updateUser.ts` — callback user sync.
@@ -46,6 +50,7 @@
 - `src/routes/.well-known/oauth-cimd/+server.ts` — legacy OIDC metadata.
 
 ### API surface (legacy)
+
 - `src/routes/api/conversation/[id]/+server.ts`
 - `src/routes/api/conversations/+server.ts`
 - `src/routes/api/models/+server.ts`
@@ -57,6 +62,7 @@
 - `src/routes/api/mcp/servers/+server.ts`
 
 ### API surface (v2)
+
 - `src/routes/api/v2/conversations/+server.ts` — list/create conversations.
 - `src/routes/api/v2/conversations/[id]/+server.ts` — conversation CRUD.
 - `src/routes/api/v2/conversations/import-share/+server.ts` — import shared conversation.
@@ -77,6 +83,7 @@
 - `src/routes/api/v2/billing/webhook/+server.ts` — Stripe webhook.
 
 ### Operational / admin
+
 - `src/routes/healthcheck/+server.ts` — liveness.
 - `src/routes/metrics/+server.ts` — Prometheus scrape endpoint.
 - `src/routes/admin/export/+server.ts` — admin export.
@@ -86,6 +93,7 @@
 ## Core Server Subsystems
 
 ### Request lifecycle and auth
+
 - `src/lib/server/hooks/init.ts` — boot-time init: DB ready, migrations, metrics, MCP warmup.
 - `src/lib/server/hooks/handle.ts` — request handling, auth, CSRF, CORS, CSP.
 - `src/lib/server/hooks/error.ts` — structured server error shaping.
@@ -97,11 +105,13 @@
 - `src/lib/server/adminToken.ts` — admin token management.
 
 ### Persistence and jobs
+
 - `src/lib/server/database.ts` — MongoDB singleton, typed collections, GridFS.
 - `src/lib/jobs/refresh-conversation-stats.ts` — background stat refresh.
 - `src/lib/migrations/**` — boot-time migration framework and routines.
 
 ### Model registry and routing
+
 - `src/lib/server/models.ts` — canonical model registry assembly.
 - `src/lib/server/router/arch.ts` — Arch router call.
 - `src/lib/server/router/policy.ts` — route selection policy.
@@ -111,6 +121,7 @@
 - `src/lib/server/router/types.ts` — router types.
 
 ### LLM endpoint adapters
+
 - `src/lib/server/endpoints/endpoints.ts` — endpoint contracts.
 - `src/lib/server/endpoints/openai/endpointOai.ts` — OpenAI-compatible upstream client.
 - `src/lib/server/endpoints/openai/openAIChatToTextGenerationStream.ts` — stream adapter.
@@ -120,6 +131,7 @@
 - `src/lib/server/generateFromDefaultEndpoint.ts` — default generation entry.
 
 ### Text generation pipeline
+
 - `src/lib/server/textGeneration/index.ts` — top-level generation orchestration.
 - `src/lib/server/textGeneration/generate.ts` — plain generation path.
 - `src/lib/server/textGeneration/types.ts` — context and stream types.
@@ -130,6 +142,7 @@
 - `src/lib/server/textGeneration/utils/toolPrompt.ts` — tool prompting.
 
 ### MCP and browser
+
 - `src/lib/server/mcp/registry.ts` — MCP server registry.
 - `src/lib/server/mcp/clientPool.ts` — pooled MCP clients.
 - `src/lib/server/mcp/httpClient.ts` — HTTP transport helpers.
@@ -142,6 +155,7 @@
 - `src/lib/server/browser/steel.ts` — Steel browser session control and debug URL rewriting.
 
 ### Infra helpers
+
 - `src/lib/server/logger.ts` — pino logger.
 - `src/lib/server/metrics.ts` — Prometheus metrics.
 - `src/lib/server/urlSafety.ts` / `isURLLocal.ts` — SSRF guards.
@@ -155,6 +169,7 @@
 ## Core Client/UI Subsystems
 
 ### Chat UI
+
 - `src/lib/components/chat/ChatWindow.svelte` — top-level conversation UI shell.
 - `src/lib/components/chat/ChatInput.svelte` — composer, uploads, send controls.
 - `src/lib/components/chat/ChatMessage.svelte` — single message renderer.
@@ -165,6 +180,7 @@
 - `src/lib/components/chat/FileDropzone.svelte`, `UploadedFile.svelte`, `UrlFetchModal.svelte`, `VoiceRecorder.svelte` — input enrichments.
 
 ### Shared UI
+
 - `src/lib/components/NavMenu.svelte`, `NavConversationItem.svelte`, `MobileNav.svelte`, `ExpandNavigation.svelte` — navigation.
 - `src/lib/components/Modal.svelte`, `Portal.svelte`, `Toast.svelte`, `Tooltip.svelte` — UI primitives.
 - `src/lib/components/ShareConversationModal.svelte`, `DeleteConversationModal.svelte`, `EditConversationModal.svelte`, `SystemPromptModal.svelte`, `SubscribeModal.svelte`, `WelcomeModal.svelte` — modal flows.
@@ -207,4 +223,5 @@
 - Composer/layout work centers on `src/lib/components/chat/ChatWindow.svelte`, `ChatInput.svelte`, and the conversation page wrapper.
 
 ---
-*File map generated for v1 GSD codebase documentation.*
+
+_File map generated for v1 GSD codebase documentation._

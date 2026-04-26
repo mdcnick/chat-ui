@@ -212,7 +212,9 @@ describe("runMcpFlow", () => {
 			],
 			mapping: {},
 		});
-		prepareMessagesWithFilesMock.mockImplementation(async (messages: unknown[]) => messages as never);
+		prepareMessagesWithFilesMock.mockImplementation(
+			async (messages: unknown[]) => messages as never
+		);
 		resolveRouterTargetMock.mockResolvedValue({
 			runMcp: true,
 			targetModel: {

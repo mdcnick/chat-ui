@@ -5,6 +5,7 @@
 ## APIs & External Services
 
 **LLM inference (canonical path):**
+
 - Any OpenAI-compatible HTTP API addressed via `OPENAI_BASE_URL` (default points at HuggingFace Router `https://router.huggingface.co/v1`; an alternate base can be configured for `OpenCode`).
   - SDK/Client: `openai` ^4.44.
   - Auth: `OPENAI_API_KEY` (canonical) or legacy `HF_TOKEN` alias.
@@ -14,12 +15,14 @@
 - Transcription service: `src/routes/api/transcribe/+server.ts` posts audio to the configured `TRANSCRIPTION_MODEL` (HF endpoint) using `getApiToken(locals)`. Accepts `audio/webm|ogg|wav|flac|mpeg|mp4|x-wav` up to 25 MB with a 60 s timeout.
 
 **LLM Router (Omni / Arch-Router):**
+
 - Custom routing layer in `src/lib/server/router/`. Calls an Arch-Router endpoint (`LLM_ROUTER_ARCH_BASE_URL`, model `LLM_ROUTER_ARCH_MODEL`) over OpenAI-compatible JSON.
 - Routes definition: JSON file at `LLM_ROUTER_ROUTES_PATH`.
 - Shortcuts: `LLM_ROUTER_ENABLE_TOOLS` (auto-pick a tools-capable model), `LLM_ROUTER_ENABLE_MULTIMODAL` (bypass router for multimodal turns and use `LLM_ROUTER_MULTIMODAL_MODEL`), `LLM_ROUTER_FALLBACK_MODEL`, `LLM_ROUTER_OTHER_ROUTE`, `LLM_ROUTER_ARCH_TIMEOUT_MS`, `LLM_ROUTER_MAX_PREV_USER_LENGTH`, `LLM_ROUTER_MAX_ASSISTANT_LENGTH`.
 - Public-facing alias: `PUBLIC_LLM_ROUTER_ALIAS_ID`, `PUBLIC_LLM_ROUTER_DISPLAY_NAME`, `PUBLIC_LLM_ROUTER_LOGO_URL`.
 
 **Model Context Protocol (MCP):**
+
 - `MCP_SERVERS` env var (JSON array of `{ url, headers? }`) defines remote MCP endpoints.
 - SDK/Client: `@modelcontextprotocol/sdk` ^1.26 — `Client` with `StreamableHTTPClientTransport` (preferred) and `SSEClientTransport` (fallback). Wrapped in `src/lib/server/mcp/clientPool.ts` with SSRF-safe fetch from `src/lib/server/urlSafety.ts`.
 - Tool execution: `src/lib/server/textGeneration/mcp/runMcpFlow.ts` and `toolInvocation.ts` translate MCP tools into OpenAI function-calling parameters.
@@ -27,23 +30,28 @@
 - Optional flags: `MCP_FORWARD_HF_USER_TOKEN`, `MCP_TOOL_TIMEOUT_MS`.
 
 **Cloud Browser (Steel):**
+
 - Service: Steel cloud browser (or self-hosted Steel) — used for tool-capable web browsing.
 - SDK/Client: `steel-sdk` ^0.18, paired with `playwright-core` ^1.59 for in-session navigation.
 - Auth: `STEEL_API_KEY` for cloud; if `STEEL_BASE_URL` is provided (self-hosted) the API key is optional.
 - Implementation: `src/lib/server/browser/steel.ts`. Optional `STEEL_PUBLIC_DEBUG_URL` rewrites session debug URLs for public exposure. `STEEL_BROWSER_TOOL_PATTERNS` filters which tool calls trigger a session.
 
 **Search (Exa):**
+
 - `EXA_API_KEY` referenced in `src/lib/server/config.ts` — feeds search-tool integrations.
 
 **HuggingFace Hub uploads:**
+
 - `@huggingface/hub` ^2.2 (`uploadFile`) used in `src/routes/admin/export/+server.ts` to publish parquet exports. Uses `PARQUET_EXPORT_HF_TOKEN` and `PARQUET_EXPORT_DATASET`.
 
 **Outbound web fetch:**
+
 - `src/routes/api/fetch-url/+server.ts` retrieves remote URLs through `undici` with SSRF guards in `src/lib/server/urlSafety.ts` (uses `ip-address` to block private/loopback ranges).
 
 ## Data Storage
 
 **Databases:** MongoDB.
+
 - Connection env var: `MONGODB_URL`. When unset, falls back to an embedded `mongodb-memory-server` (binary version `7.0.18`) persisting under `MONGO_STORAGE_PATH` (default `./db`).
 - Driver: `mongodb` ^5.8. Optional `MONGODB_DIRECT_CONNECTION=true` for single-node replica sets.
 - DB name: `MONGODB_DB_NAME` (suffixed with `-test` in test mode).
@@ -57,11 +65,13 @@
 ## Authentication & Identity
 
 **Auth Provider:** Clerk (primary).
+
 - SDK: `@clerk/backend` ^3.3 in `src/lib/server/clerk.ts`. Authentication routed through `authenticateClerkRequest`; user profiles synced via `src/lib/server/syncAuthenticatedUser.ts`.
 - Required env: `PUBLIC_CLERK_PUBLISHABLE_KEY` plus `CLERK_SECRET_KEY` and/or `CLERK_JWT_KEY`. Browser sign-in URL `PUBLIC_CLERK_SIGN_IN_URL` (and `PUBLIC_CLERK_SIGN_UP_URL`) are required to enable login redirects.
 - Authorized parties include the request origin, `PUBLIC_ORIGIN`, plus localhost during dev.
 
 **Alternate identity paths in `src/lib/server/auth.ts`:**
+
 - Trusted reverse-proxy header: when `TRUSTED_EMAIL_HEADER` is set, requests with that header are auto-authenticated as anonymous users.
 - Cookie session: `COOKIE_NAME` (HttpOnly, `addWeeks(2)`); `COOKIE_SAMESITE` and `COOKIE_SECURE` defaulted from `dev` mode and `ALLOW_INSECURE_COOKIES`. Optional cookie pinning via `COUPLE_SESSION_WITH_COOKIE_NAME` (SHA-256 hashed value compared on every request).
 - Allow-listing: `ALLOWED_USER_EMAILS` and `ALLOWED_USER_DOMAINS` (JSON arrays).
@@ -88,6 +98,7 @@
 **Hosting:** Container-based; supported targets include Railway (`railway.json`), HuggingFace Spaces (Dockerfile uses `user` UID 1000), and any Docker host. Default app port `3000` (override via `PORT`).
 
 **CI Pipeline:** GitHub Actions in `.github/workflows/`:
+
 - `lint-and-test.yml` — Node 20, runs `npm run lint`, `npm run check`, `npm run test` (Playwright installed), then a Docker build smoke test (`INCLUDE_DB=true`) that boots the container and probes `http://localhost:3000/`.
 - `build-image.yml` — publishes Docker images on push to `main`, releases, and Dockerfile/entrypoint PRs.
 - `build-docs.yml`, `build-pr-docs.yml`, `upload-pr-documentation.yml` — docs pipeline.
@@ -100,6 +111,7 @@
 ## Environment Configuration
 
 **Required env vars (names only):**
+
 - LLM core: `OPENAI_BASE_URL`, `OPENAI_API_KEY` (or legacy `HF_TOKEN`), `TASK_MODEL`, `LLM_SUMMARIZATION`, `USE_USER_TOKEN`.
 - OpenCode (optional): `OPENCODE_BASE_URL`, `OPENCODE_API_KEY`, `OPENCODE_MODELS`.
 - Router: `LLM_ROUTER_ROUTES_PATH`, `LLM_ROUTER_ARCH_BASE_URL`, `LLM_ROUTER_ARCH_MODEL`, `LLM_ROUTER_ARCH_TIMEOUT_MS`, `LLM_ROUTER_ENABLE_TOOLS`, `LLM_ROUTER_ENABLE_MULTIMODAL`, `LLM_ROUTER_MULTIMODAL_MODEL`, `LLM_ROUTER_FALLBACK_MODEL`, `LLM_ROUTER_OTHER_ROUTE`, `LLM_ROUTER_MAX_PREV_USER_LENGTH`, `LLM_ROUTER_MAX_ASSISTANT_LENGTH`, `PUBLIC_LLM_ROUTER_ALIAS_ID`, `PUBLIC_LLM_ROUTER_DISPLAY_NAME`, `PUBLIC_LLM_ROUTER_LOGO_URL`.
@@ -122,6 +134,7 @@
 ## Webhooks & Callbacks
 
 **Incoming:**
+
 - `POST /api/v2/billing/webhook` — Stripe webhook (`src/routes/api/v2/billing/webhook/+server.ts`). Verifies signature with `STRIPE_WEBHOOK_SECRET` and `stripe-signature` header. Updates `billingEntitlements` MongoDB collection from subscription events.
 - `GET /healthcheck` — liveness probe (consumed by Railway).
 - `GET /metrics` — Prometheus scrape target.
@@ -129,6 +142,7 @@
 - `GET /api/mcp/health`, `GET /api/mcp/servers` — MCP status endpoints consumed by the UI.
 
 **Outgoing:**
+
 - LLM streaming requests → `OPENAI_BASE_URL` (and `LLM_ROUTER_ARCH_BASE_URL`).
 - HuggingFace Inference / transcription → HF inference endpoints via `getApiToken`.
 - HuggingFace Hub uploads → `huggingface.co` API for parquet datasets.
@@ -138,4 +152,5 @@
 - Generic `/api/fetch-url` proxy — guarded by `ssrfSafeFetch`.
 
 ---
-*Integration audit: 2026-04-25*
+
+_Integration audit: 2026-04-25_
