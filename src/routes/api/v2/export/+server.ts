@@ -58,14 +58,14 @@ export const GET: RequestHandler = async ({ locals }) => {
 					conversations.map(async (conversation) => {
 						stats.nConversations++;
 						const hashes: string[] = [];
-						conversation.messages.forEach(async (message) => {
+						for (const message of conversation.messages) {
 							stats.nMessages++;
 							if (message.files) {
-								message.files.forEach((file) => {
+								for (const file of message.files) {
 									hashes.push(file.value);
-								});
+								}
 							}
-						});
+						}
 						const files = await Promise.all(
 							hashes.map(async (hash) => {
 								try {
@@ -86,10 +86,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 							const fileId = file.name.split("-")[1].slice(0, 8);
 							const fileName = `file-${convId}-${fileId}` + (extension ? `.${extension}` : "");
 							filenames.push(fileName);
-							zipfile.addBuffer(Buffer.from(file.value, "base64"), fileName);
-							stats.nFiles++;
+							try {
+								zipfile.addBuffer(Buffer.from(file.value, "base64"), fileName);
+								stats.nFiles++;
+							} catch (err) {
+								logger.warn({ fileName, err: String(err) }, "Failed to add file to zip");
+							}
 						});
-
 						return {
 							...conversation,
 							messages: conversation.messages.map((message) => {
@@ -115,29 +118,44 @@ export const GET: RequestHandler = async ({ locals }) => {
 				const formattedAssistants = await Promise.all(
 					assistants.map(async (assistant) => {
 						if (assistant.avatar) {
-							const fileId = collections.bucket.find({
+							const file = await collections.bucket.findOne({
 								filename: assistant._id.toString(),
 							});
 
-							const content = await fileId.next().then(async (file) => {
-								if (!file?._id) return;
+							if (!file?._id) {
+								logger.warn(
+									{ assistantId: assistant._id.toString() },
+									"Avatar file not found for assistant"
+								);
+								return;
+							}
 
-								const fileStream = collections.bucket.openDownloadStream(file?._id);
+							const fileStream = collections.bucket.openDownloadStream(file._id);
 
-								const fileBuffer = await new Promise<Buffer>((resolve, reject) => {
-									const chunks: Uint8Array[] = [];
-									fileStream.on("data", (chunk) => chunks.push(chunk));
-									fileStream.on("error", reject);
-									fileStream.on("end", () => resolve(Buffer.concat(chunks)));
-								});
-
-								return fileBuffer;
+							const fileBuffer = await new Promise<Buffer>((resolve, reject) => {
+								const chunks: Uint8Array[] = [];
+								fileStream.on("data", (chunk) => chunks.push(chunk));
+								fileStream.on("error", reject);
+								fileStream.on("end", () => resolve(Buffer.concat(chunks)));
 							});
 
-							if (!content) return;
+							if (!fileBuffer) {
+								logger.warn(
+									{ assistantId: assistant._id.toString() },
+									"Avatar file buffer is empty"
+								);
+								return;
+							}
 
-							zipfile.addBuffer(content, `avatar-${assistant._id.toString()}.jpg`);
-							stats.nAvatars++;
+							try {
+								zipfile.addBuffer(fileBuffer, `avatar-${assistant._id.toString()}.jpg`);
+								stats.nAvatars++;
+							} catch (err) {
+								logger.warn(
+									{ assistantId: assistant._id.toString(), err: String(err) },
+									"Failed to add avatar to zip"
+								);
+							}
 						}
 
 						stats.nAssistants++;
@@ -167,27 +185,26 @@ export const GET: RequestHandler = async ({ locals }) => {
 			}),
 	];
 
-	Promise.all(promises).then(async () => {
-		logger.info(
-			{
-				userId: locals.user?._id,
-				...stats,
-			},
-			"Exported user data"
-		);
-		zipfile.end();
-		if (locals.user?._id) {
-			await collections.messageEvents.insertOne({
-				userId: locals.user?._id,
-				type: "export",
-				createdAt: new Date(),
-				expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
-			});
-		}
-	});
+	await Promise.all(promises);
 
-	// @ts-expect-error - zipfile.outputStream is not typed correctly
-	return new Response(zipfile.outputStream, {
+	logger.info(
+		{
+			userId: locals.user?._id,
+			...stats,
+		},
+		"Exported user data"
+	);
+	zipfile.end();
+	if (locals.user?._id) {
+		await collections.messageEvents.insertOne({
+			userId: locals.user._id,
+			type: "export",
+			createdAt: new Date(),
+			expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+		});
+	}
+
+	return new Response(zipfile.outputStream as ReadableStream, {
 		headers: {
 			"Content-Type": "application/zip",
 			"Content-Disposition": 'attachment; filename="export.zip"',
