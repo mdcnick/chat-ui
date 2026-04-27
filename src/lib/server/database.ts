@@ -16,6 +16,7 @@ import { logger } from "$lib/server/logger";
 import { building } from "$app/environment";
 import type { TokenCache } from "$lib/types/TokenCache";
 import type { BillingEntitlement } from "$lib/types/BillingEntitlement";
+import type { AgentSession } from "$lib/types/AgentSession";
 import { onExit } from "./exitHandler";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -129,6 +130,7 @@ export class Database {
 		const migrationResults = db.collection<MigrationResult>("migrationResults");
 		const sharedConversations = db.collection<SharedConversation>("sharedConversations");
 		const billingEntitlements = db.collection<BillingEntitlement>("billingEntitlements");
+		const agentSessions = db.collection<AgentSession>("agentSessions");
 		const bucket = new GridFSBucket(db, { bucketName: "files" });
 
 		// Collections with secondaryPreferred - heavy reads, can tolerate slight replication lag
@@ -163,6 +165,7 @@ export class Database {
 			tools,
 			config: configCollection,
 			billingEntitlements,
+			agentSessions,
 		};
 	}
 
@@ -392,6 +395,9 @@ export class Database {
 			.catch((e) =>
 				logger.error(e, "Error creating index for billingEntitlements by stripeSubscriptionId")
 			);
+		agentSessions
+			.createIndex({ userId: 1 }, { unique: true })
+			.catch((e) => logger.error(e, "Error creating index for agentSessions by userId"));
 	}
 }
 
