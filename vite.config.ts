@@ -38,6 +38,12 @@ export default defineConfig({
 	optimizeDeps: {
 		include: ["uuid", "sharp", "clsx"],
 	},
+	ssr: {
+		// Force Vite to bundle these ESM packages that import CJS mongodb.
+		// Without this, Vite's module runner can't resolve named CJS exports
+		// (UUID from mongodb) when evaluating ESM files in its VM context.
+		noExternal: ["@better-auth/mongo-adapter", "better-auth"],
+	},
 	test: {
 		workspace: [
 			...(process.env.VITEST_BROWSER === "true"
