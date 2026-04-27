@@ -100,6 +100,9 @@ export async function handleRequest({ event, resolve }: HandleInput): Promise<Re
 						event.url.pathname !== `${base}` &&
 						!event.url.pathname.startsWith(`${base}/login`) &&
 						!event.url.pathname.startsWith(`${base}/login/callback`) &&
+						!event.url.pathname.startsWith(`${base}/register`) &&
+						!event.url.pathname.startsWith(`${base}/forgot-password`) &&
+						!event.url.pathname.startsWith(`${base}/reset-password`) &&
 						!event.url.pathname.startsWith(`${base}/healthcheck`) &&
 						!event.url.pathname.startsWith(`${base}/r/`) &&
 						!event.url.pathname.startsWith(`${base}/conversation/`) &&
@@ -170,7 +173,11 @@ export async function handleRequest({ event, resolve }: HandleInput): Promise<Re
 				!event.locals.user &&
 				!isStripeBillingWebhook &&
 				!isMcpHealth &&
+				!event.url.pathname.startsWith(`${base}/api/auth`) &&
 				!event.url.pathname.startsWith(`${base}/login`) &&
+				!event.url.pathname.startsWith(`${base}/register`) &&
+				!event.url.pathname.startsWith(`${base}/forgot-password`) &&
+				!event.url.pathname.startsWith(`${base}/reset-password`) &&
 				!event.url.pathname.startsWith(`${base}/admin`) &&
 				!event.url.pathname.startsWith(`${base}/settings`) &&
 				!["GET", "OPTIONS", "HEAD"].includes(event.request.method)

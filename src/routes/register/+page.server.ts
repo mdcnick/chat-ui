@@ -1,7 +1,7 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import { loginEnabled } from "$lib/server/auth";
-import { getBetterAuth, setAuthSessionCookie } from "$lib/server/betterAuth";
+import { forwardBetterAuthCookies } from "$lib/server/betterAuth";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async ({ request, fetch, url, cookies }) => {
 		const data = await request.formData();
 		const name = String(data.get("name") ?? "").trim();
 		const email = String(data.get("email") ?? "").trim();
@@ -30,36 +30,30 @@ export const actions: Actions = {
 			return fail(503, { error: "Registration is not configured.", name, email });
 		}
 
-		try {
-			const ba = await getBetterAuth();
-			const result = await ba.api.signUpEmail({
-				body: { name, email, password },
-				headers: request.headers,
-			});
+		const res = await fetch(`${url.origin}${base}/api/auth/sign-up/email`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name, email, password }),
+		});
 
-			if (result?.token) {
-				setAuthSessionCookie(cookies, result.token);
-			}
-		} catch (err) {
-			const msg =
-				err && typeof err === "object" && "body" in err
-					? (err.body as { message?: string })?.message
-					: undefined;
-
-			if (msg?.toLowerCase().includes("already") || msg?.toLowerCase().includes("exist")) {
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			const msg = (body as { message?: string })?.message ?? "";
+			if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exist")) {
 				return fail(409, {
 					error: "An account with this email already exists. Sign in instead.",
 					name,
 					email,
 				});
 			}
-
-			return fail(400, {
-				error: msg ?? "Could not create account. Please try again.",
+			return fail(res.status >= 400 && res.status < 500 ? res.status : 400, {
+				error: msg || "Could not create account. Please try again.",
 				name,
 				email,
 			});
 		}
+
+		forwardBetterAuthCookies(cookies, res);
 
 		throw redirect(302, `${base}/`);
 	},

@@ -94,3 +94,41 @@ export function clearAuthSessionCookie(cookies: Cookies) {
 		sameSite: dev || config.ALLOW_INSECURE_COOKIES === "true" ? "lax" : "none",
 	});
 }
+
+/**
+ * Forward Set-Cookie headers from a Better Auth fetch response to the SvelteKit cookie jar.
+ * Better Auth signs cookies and URL-encodes the value once; we must NOT re-encode it.
+ */
+export function forwardBetterAuthCookies(cookies: Cookies, response: Response): void {
+	const setCookieHeader = response.headers.get("set-cookie");
+	if (!setCookieHeader) return;
+
+	// Multiple Set-Cookie headers may be joined by ", " — split carefully
+	const parts = setCookieHeader.split(/,(?=\s*\w+=)/);
+	for (const part of parts) {
+		const segments = part.split(";").map((s) => s.trim());
+		const nameVal = segments[0];
+		const eqIdx = nameVal.indexOf("=");
+		if (eqIdx < 0) continue;
+		const cName = nameVal.slice(0, eqIdx).trim();
+		const cVal = nameVal.slice(eqIdx + 1);
+
+		const attrMap: Record<string, string | boolean> = {};
+		for (const seg of segments.slice(1)) {
+			const [k, v] = seg.split("=").map((s) => s.trim());
+			attrMap[k.toLowerCase()] = v !== undefined ? v : true;
+		}
+
+		cookies.set(cName, cVal, {
+			path: (attrMap["path"] as string) || "/",
+			httpOnly: "httponly" in attrMap,
+			secure: "secure" in attrMap,
+			sameSite: (attrMap["samesite"] as "lax" | "strict" | "none" | undefined) ?? "lax",
+			maxAge: attrMap["max-age"] ? Number(attrMap["max-age"]) : undefined,
+			// Preserve the already-encoded cookie value — Better Auth signs and URL-encodes it once.
+			// Passing it through SvelteKit's default encodeURIComponent would double-encode it and
+			// break Better Auth's HMAC signature verification.
+			encode: (v) => v,
+		});
+	}
+}

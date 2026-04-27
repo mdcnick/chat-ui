@@ -1,7 +1,7 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import { loginEnabled, sanitizeReturnPath } from "$lib/server/auth";
-import { getBetterAuth, setAuthSessionCookie } from "$lib/server/betterAuth";
+import { forwardBetterAuthCookies } from "$lib/server/betterAuth";
 import { config } from "$lib/server/config";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async ({ request, fetch, url, cookies }) => {
 		const data = await request.formData();
 		const email = String(data.get("email") ?? "").trim();
 		const password = String(data.get("password") ?? "");
@@ -42,26 +42,22 @@ export const actions: Actions = {
 			return fail(503, { error: "Login is not configured.", email });
 		}
 
-		try {
-			const ba = await getBetterAuth();
-			const result = await ba.api.signInEmail({
-				body: { email, password },
-				headers: request.headers,
-			});
+		const res = await fetch(`${url.origin}${base}/api/auth/sign-in/email`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email, password }),
+		});
 
-			if (result?.token) {
-				setAuthSessionCookie(cookies, result.token);
-			}
-		} catch (err) {
-			const msg =
-				err && typeof err === "object" && "body" in err
-					? (err.body as { message?: string })?.message
-					: undefined;
+		if (!res.ok) {
+			const body = await res.json().catch(() => ({}));
+			const msg = (body as { message?: string })?.message ?? "";
 			return fail(401, {
-				error: msg ?? "Invalid email or password.",
+				error: msg || "Invalid email or password.",
 				email,
 			});
 		}
+
+		forwardBetterAuthCookies(cookies, res);
 
 		throw redirect(302, next);
 	},
