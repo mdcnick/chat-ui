@@ -70,6 +70,7 @@
 		"@huggingface/hub": "^2.2.0",
 		"@huggingface/inference": "^4.11.3",
 		"@iconify-json/bi": "^1.1.21",
+		"@internationalized/date": "^3.12.1",
 		"@modelcontextprotocol/sdk": "^1.26.0",
 		"@resvg/resvg-js": "^2.6.2",
 		"autoprefixer": "^10.4.14",
