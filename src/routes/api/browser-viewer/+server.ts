@@ -1,16 +1,33 @@
 import { env } from "$env/dynamic/private";
 import { error } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
 // Proxy the Steel session viewer HTML, rewriting the hardcoded container-internal
 // WebSocket URL (ws://0.0.0.0:3000) to the host-accessible address so the browser
 // can actually connect to the Steel cast WebSocket.
-export async function GET() {
+export async function GET({ url: reqUrl }: RequestEvent) {
 	const baseURL = (env.STEEL_BASE_URL ?? "").replace(/\/$/, "");
 	if (!baseURL) {
 		error(503, "Steel browser not configured");
 	}
 
-	const viewerUrl = `${baseURL}/v1/sessions/debug`;
+	// Accept an explicit session viewer URL via ?url= param; fall back to generic debug page.
+	const rawParam = reqUrl.searchParams.get("url");
+	const viewerUrl = rawParam ? decodeURIComponent(rawParam) : `${baseURL}/v1/sessions/debug`;
+
+	// Safety: only allow proxying URLs that originate from the configured Steel base
+	if (rawParam) {
+		try {
+			const target = new URL(viewerUrl);
+			const allowed = new URL(baseURL);
+			if (target.hostname !== allowed.hostname || target.port !== allowed.port) {
+				error(403, "Viewer URL host does not match configured Steel base URL");
+			}
+		} catch {
+			error(400, "Invalid viewer URL");
+		}
+	}
+
 	let html: string;
 	try {
 		const res = await fetch(viewerUrl);

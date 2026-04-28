@@ -25,6 +25,7 @@ describe("BrowserSessionStore", () => {
 			.mockResolvedValue({
 				sessionId: "steel-session-1",
 				debugUrl: "https://debug.example/session/1",
+				websocketUrl: "wss://debug.example/session/1/ws",
 			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
@@ -66,6 +67,7 @@ describe("BrowserSessionStore", () => {
 			.mockResolvedValue({
 				sessionId: "steel-session-2",
 				debugUrl: "https://debug.example/session/2",
+				websocketUrl: "wss://debug.example/session/2/ws",
 			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
 		const navigateSession = vi
@@ -88,7 +90,11 @@ describe("BrowserSessionStore", () => {
 		expect(navigated?.sessionId).toBe(created?.sessionId);
 		expect(createSession).toHaveBeenCalledTimes(1);
 		expect(navigateSession).toHaveBeenCalledTimes(1);
-		expect(navigateSession).toHaveBeenCalledWith("steel-session-2", "steel browser", undefined);
+		expect(navigateSession).toHaveBeenCalledWith(
+			"wss://debug.example/session/2/ws",
+			"steel browser",
+			undefined
+		);
 		expect(store.get("conv-2")?.lastUsedAt).toBe(2_500);
 		expect(loggerDebug).toHaveBeenCalledWith(
 			{ conversationId: "conv-2", sessionId: "steel-session-2" },
@@ -105,6 +111,7 @@ describe("BrowserSessionStore", () => {
 				return {
 					sessionId: `steel-session-${createdCount}`,
 					debugUrl: `https://debug.example/session/${createdCount}`,
+					websocketUrl: `wss://debug.example/session/${createdCount}/ws`,
 				};
 			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();
@@ -180,6 +187,7 @@ describe("BrowserSessionStore", () => {
 				return {
 					sessionId: `steel-session-${createdCount}`,
 					debugUrl: `https://debug.example/session/${createdCount}`,
+					websocketUrl: `wss://debug.example/session/${createdCount}/ws`,
 				};
 			});
 		const releaseSession = vi.fn<(sessionId: string) => Promise<void>>().mockResolvedValue();

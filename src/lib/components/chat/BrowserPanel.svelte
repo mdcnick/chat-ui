@@ -48,6 +48,11 @@
 	const canRetry = $derived(Boolean(debugUrl));
 	const headerLabel = $derived(url ?? "Live Browser");
 	const visibleError = $derived(panelError ?? error);
+	const viewerSrc = $derived(
+		debugUrl
+			? `/api/browser-viewer?url=${encodeURIComponent(debugUrl)}`
+			: `/api/browser-viewer`
+	);
 </script>
 
 <!-- No outer header bar — Steel's viewer already renders its own browser chrome.
@@ -114,9 +119,9 @@
 				</div>
 			</div>
 		{/if}
-		{#key iframeKey}
+		{#key viewerSrc + iframeKey}
 			<iframe
-				src="/api/browser-viewer"
+				src={viewerSrc}
 				title="Live Browser"
 				class="h-full w-full"
 				onload={handleLoad}

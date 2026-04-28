@@ -55,6 +55,13 @@ function rewriteWebsocketUrl(original: string): string {
 export interface BrowserSession {
 	sessionId: string;
 	debugUrl: string;
+	websocketUrl: string;
+}
+
+export function isSteelConfigured(): boolean {
+	const apiKey = env.STEEL_API_KEY;
+	const baseURL = env.STEEL_BASE_URL;
+	return !!(apiKey || baseURL);
 }
 
 export async function createSteelSession(options?: {
@@ -147,7 +154,11 @@ export async function createBrowserSession(
 		}
 	}
 
-	return { sessionId: session.sessionId, debugUrl: session.debugUrl };
+	return {
+		sessionId: session.sessionId,
+		debugUrl: session.debugUrl,
+		websocketUrl: session.websocketUrl,
+	};
 }
 
 export async function releaseBrowserSession(sessionId: string): Promise<void> {
@@ -173,4 +184,77 @@ export function shouldOpenBrowserPanel(toolName: string): boolean {
 	if (!patterns.length) return false;
 	const normalized = toolName.toLowerCase();
 	return patterns.some((p) => normalized.includes(p));
+}
+
+const BROWSER_ACTION_TIMEOUT_MS = 10_000;
+
+export async function screenshotSession(websocketUrl: string): Promise<{
+	url: string;
+	title: string;
+	text: string;
+}> {
+	const browser = await connectToSteelSession(websocketUrl);
+	try {
+		const context = browser.contexts()[0] ?? (await browser.newContext());
+		const page = context.pages()[0] ?? (await context.newPage());
+		const text: string = await page.evaluate(() => (document.body as HTMLElement).innerText ?? "");
+		return { url: page.url(), title: await page.title(), text: text.slice(0, 8000) };
+	} finally {
+		await browser.close();
+	}
+}
+
+export async function clickInSession(
+	websocketUrl: string,
+	selector: string
+): Promise<{ url: string }> {
+	const browser = await connectToSteelSession(websocketUrl);
+	try {
+		const context = browser.contexts()[0] ?? (await browser.newContext());
+		const page = context.pages()[0] ?? (await context.newPage());
+		await page.click(selector, { timeout: BROWSER_ACTION_TIMEOUT_MS });
+		await page
+			.waitForLoadState("domcontentloaded", { timeout: BROWSER_ACTION_TIMEOUT_MS })
+			.catch(() => {});
+		return { url: page.url() };
+	} finally {
+		await browser.close();
+	}
+}
+
+export async function typeInSession(
+	websocketUrl: string,
+	text: string,
+	selector?: string
+): Promise<{ url: string }> {
+	const browser = await connectToSteelSession(websocketUrl);
+	try {
+		const context = browser.contexts()[0] ?? (await browser.newContext());
+		const page = context.pages()[0] ?? (await context.newPage());
+		if (selector) {
+			await page.fill(selector, text, { timeout: BROWSER_ACTION_TIMEOUT_MS });
+		} else {
+			await page.keyboard.type(text);
+		}
+		return { url: page.url() };
+	} finally {
+		await browser.close();
+	}
+}
+
+export async function extractFromSession(
+	websocketUrl: string,
+	selector?: string
+): Promise<{ text: string; url: string; title: string }> {
+	const browser = await connectToSteelSession(websocketUrl);
+	try {
+		const context = browser.contexts()[0] ?? (await browser.newContext());
+		const page = context.pages()[0] ?? (await context.newPage());
+		const raw: string = selector
+			? ((await page.textContent(selector)) ?? "")
+			: await page.evaluate(() => (document.body as HTMLElement).innerText ?? "");
+		return { text: raw.slice(0, 10_000), url: page.url(), title: await page.title() };
+	} finally {
+		await browser.close();
+	}
 }

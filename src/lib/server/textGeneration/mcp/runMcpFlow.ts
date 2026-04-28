@@ -1,5 +1,9 @@
 import { config } from "$lib/server/config";
-import { MessageUpdateType, type MessageUpdate } from "$lib/types/MessageUpdate";
+import {
+	MessageToolUpdateType,
+	MessageUpdateType,
+	type MessageUpdate,
+} from "$lib/types/MessageUpdate";
 import { getMcpServers } from "$lib/server/mcp/registry";
 import { isValidUrl } from "$lib/server/urlSafety";
 import { resetMcpToolsCache } from "$lib/server/mcp/tools";
@@ -30,8 +34,15 @@ import { logger } from "$lib/server/logger";
 import { AbortedGenerations } from "$lib/server/abortedGenerations";
 import { canUseHermesTools } from "$lib/server/billing/entitlements";
 import { PaidFeatureRequiredError } from "$lib/server/billing/errors";
+import { randomUUID } from "crypto";
+import { ToolResultStatus } from "$lib/types/Tool";
 import { browserSessionStore } from "$lib/server/browser/sessionStore";
-import { shouldOpenBrowserPanel } from "$lib/server/browser/steel";
+import { shouldOpenBrowserPanel, isSteelConfigured } from "$lib/server/browser/steel";
+import {
+	BROWSER_TOOL_NAMES,
+	browserToolDefinitions,
+	executeBrowserTool,
+} from "$lib/server/browser/browserTools";
 
 export type RunMcpFlowContext = Pick<
 	TextGenerationContext,
@@ -316,6 +327,17 @@ export async function* runMcpFlow({
 		if (oaTools.length === 0) {
 			logger.warn({}, "[mcp] zero tools available after listing; skipping MCP flow");
 			return "not_applicable";
+		}
+
+		// Inject built-in browser action tools when Steel is configured
+		if (isSteelConfigured()) {
+			for (const tool of browserToolDefinitions) {
+				oaTools.push(tool);
+			}
+			logger.debug(
+				{ injectedCount: browserToolDefinitions.length },
+				"[mcp] injected browser action tools"
+			);
 		}
 
 		const { OpenAI } = await import("openai");
@@ -695,11 +717,15 @@ export async function* runMcpFlow({
 					tool_calls: toolCalls,
 				};
 
-				// Open or reuse a conversation-scoped live browser panel for search-related tool calls.
-				// The Steel debugUrl is a live stream and should stay stable while server-side navigation updates it.
-				const matchingCall = calls.find((c) => shouldOpenBrowserPanel(c.name));
-				if (matchingCall) {
-					const args = parseArgs(matchingCall.arguments);
+				// Partition calls: built-in browser tools execute locally; external MCP tools go via HTTP.
+				const browserCalls = calls.filter((c) => BROWSER_TOOL_NAMES.has(c.name));
+				const mcpCalls = calls.filter((c) => !BROWSER_TOOL_NAMES.has(c.name));
+
+				// Open or reuse a conversation-scoped live browser panel.
+				// browser_navigate is handled below; pattern-matched MCP tools are handled here.
+				const matchingMcpCall = mcpCalls.find((c) => shouldOpenBrowserPanel(c.name));
+				if (matchingMcpCall) {
+					const args = parseArgs(matchingMcpCall.arguments);
 					const query =
 						typeof args.query === "string"
 							? args.query
@@ -745,7 +771,7 @@ export async function* runMcpFlow({
 							logger.warn(
 								{
 									conversationId,
-									toolName: matchingCall.name,
+									toolName: matchingMcpCall.name,
 									hasQuery: Boolean(query),
 									hasUrl: Boolean(url),
 								},
@@ -761,41 +787,165 @@ export async function* runMcpFlow({
 					}
 				}
 
-				const exec = executeToolCalls({
-					calls,
-					mapping,
-					servers,
-					parseArgs,
-					resolveFileRef,
-					toPrimitive,
-					processToolOutput,
-					abortSignal,
-				});
-				let toolMsgCount = 0;
-				let toolRunCount = 0;
-				for await (const event of exec) {
-					if (event.type === "update") {
-						yield event.update;
+				// Handle browser_navigate: ensure a Steel session exists and emit the Browser update.
+				const navCall = browserCalls.find((c) => c.name === "browser_navigate");
+				if (navCall) {
+					const navArgs = parseArgs(navCall.arguments);
+					const navUrl = typeof navArgs.url === "string" ? navArgs.url : undefined;
+					const navQuery = typeof navArgs.query === "string" ? navArgs.query : undefined;
+					const resolvedNavUrl =
+						navUrl ??
+						(navQuery
+							? `https://www.google.com/search?q=${encodeURIComponent(navQuery)}`
+							: undefined);
+					const existingSession = browserSessionStore.get(conversationId);
+
+					if (existingSession) {
+						const reusedSession = await browserSessionStore.navigate(conversationId, {
+							url: navUrl,
+							query: navQuery,
+						});
+						if (reusedSession) {
+							yield {
+								type: MessageUpdateType.Browser,
+								status: "navigate",
+								sessionId: reusedSession.sessionId,
+								debugUrl: reusedSession.debugUrl,
+								url: resolvedNavUrl,
+							};
+						}
 					} else {
-						messagesOpenAI = [
-							...messagesOpenAI,
-							assistantToolMessage,
-							...(event.summary.toolMessages ?? []),
-						];
-						toolMsgCount = event.summary.toolMessages?.length ?? 0;
-						toolRunCount = event.summary.toolRuns?.length ?? 0;
-						logger.info(
-							{ toolMsgCount, toolRunCount },
-							"[mcp] tools executed; continuing loop for follow-up completion"
-						);
+						const createdSession = await browserSessionStore.getOrCreate(conversationId, {
+							url: navUrl,
+							query: navQuery,
+						});
+						if (createdSession) {
+							yield {
+								type: MessageUpdateType.Browser,
+								status: "open",
+								sessionId: createdSession.sessionId,
+								debugUrl: createdSession.debugUrl,
+								url: resolvedNavUrl,
+							};
+						} else {
+							logger.warn(
+								{ conversationId, hasUrl: Boolean(navUrl), hasQuery: Boolean(navQuery) },
+								"[mcp] failed to create browser session for browser_navigate"
+							);
+						}
+					}
+				}
+
+				// Execute browser tool calls locally via CDP.
+				const allToolMessages: ChatCompletionMessageParam[] = [];
+
+				for (const call of browserCalls) {
+					const uuid = randomUUID();
+					const argsObj = parseArgs(call.arguments);
+					const paramsClean: Record<string, string | number | boolean> = {};
+					for (const [k, v] of Object.entries(argsObj ?? {})) {
+						if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+							paramsClean[k] = v;
+						}
 					}
 
-					// Check abort during tool execution
+					yield {
+						type: MessageUpdateType.Tool,
+						subtype: MessageToolUpdateType.Call,
+						uuid,
+						call: { name: call.name, parameters: paramsClean },
+					};
+					yield {
+						type: MessageUpdateType.Tool,
+						subtype: MessageToolUpdateType.ETA,
+						uuid,
+						eta: 5,
+					};
+
+					try {
+						const result = await executeBrowserTool(call.name, argsObj, conversationId);
+						yield {
+							type: MessageUpdateType.Tool,
+							subtype: MessageToolUpdateType.Result,
+							uuid,
+							result: {
+								status: ToolResultStatus.Success,
+								call: { name: call.name, parameters: paramsClean },
+								outputs: [{ text: result.text }],
+								display: true,
+							},
+						};
+						if (result.imageData) {
+							// OpenAI API supports image_url in tool message content for vision models;
+							// the SDK TypeScript types are overly restrictive here.
+							allToolMessages.push({
+								role: "tool",
+								tool_call_id: call.id,
+								content: [
+									{ type: "text", text: result.text },
+									{ type: "image_url", image_url: { url: result.imageData } },
+								],
+							} as unknown as ChatCompletionMessageParam);
+						} else {
+							allToolMessages.push({ role: "tool", tool_call_id: call.id, content: result.text });
+						}
+					} catch (err) {
+						const errMsg = err instanceof Error ? err.message : String(err);
+						yield {
+							type: MessageUpdateType.Tool,
+							subtype: MessageToolUpdateType.Error,
+							uuid,
+							message: errMsg,
+						};
+						allToolMessages.push({
+							role: "tool",
+							tool_call_id: call.id,
+							content: `Error: ${errMsg}`,
+						});
+					}
+
 					if (checkAborted()) {
-						logger.info({ loop, toolMsgCount }, "[mcp] aborting during tool execution");
+						logger.info({ loop }, "[mcp] aborting during browser tool execution");
 						return "aborted";
 					}
 				}
+
+				// Execute external MCP tool calls via HTTP transport.
+				if (mcpCalls.length > 0) {
+					const exec = executeToolCalls({
+						calls: mcpCalls,
+						mapping,
+						servers,
+						parseArgs,
+						resolveFileRef,
+						toPrimitive,
+						processToolOutput,
+						abortSignal,
+					});
+					for await (const event of exec) {
+						if (event.type === "update") {
+							yield event.update;
+						} else {
+							allToolMessages.push(...(event.summary.toolMessages ?? []));
+						}
+
+						// Check abort during tool execution
+						if (checkAborted()) {
+							logger.info({ loop }, "[mcp] aborting during tool execution");
+							return "aborted";
+						}
+					}
+				}
+
+				messagesOpenAI = [...messagesOpenAI, assistantToolMessage, ...allToolMessages];
+				logger.info(
+					{
+						browserCount: browserCalls.length,
+						mcpCount: mcpCalls.length,
+						totalToolMsgs: allToolMessages.length,
+					},
+					"[mcp] tools executed; continuing loop for follow-up completion"
+				);
 
 				// Check abort after all tools complete before continuing loop
 				if (checkAborted()) {

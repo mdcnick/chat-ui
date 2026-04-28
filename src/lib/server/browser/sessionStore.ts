@@ -99,7 +99,7 @@ export class BrowserSessionStore {
 			return null;
 		}
 
-		await this.deps.navigateSession(session.sessionId, target.query, target.url);
+		await this.deps.navigateSession(session.websocketUrl, target.query, target.url);
 		this.markUsed(conversationId);
 		logger.debug(
 			{ conversationId, sessionId: session.sessionId },
