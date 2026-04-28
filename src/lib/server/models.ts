@@ -498,6 +498,8 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 							providers.push({ provider: "opencode" });
 							(existing as { providers?: unknown[] }).providers = providers;
 						}
+						// Mark as tool-capable — OpenCode models in OPENCODE_MODELS support tool calls
+						(existing as { supportsTools?: boolean }).supportsTools = true;
 					} else {
 						builtModels.push(m);
 					}
