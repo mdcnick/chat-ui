@@ -27,14 +27,14 @@ export async function GET() {
 	const wsBase = baseURL.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
 	html = html.replace(/ws:\/\/0\.0\.0\.0:\d+/g, wsBase);
 
-	// The Steel viewer canvas uses height:100%/width:auto, causing it to overflow the
-	// panel width when the session viewport (1920×1080) is wider than the panel.
-	// Override canvas sizing so it scales to fit the panel width instead.
+	// The Steel viewer canvas is position:absolute with height:100%/width:auto, causing
+	// it to overflow the panel horizontally (1920px wide in a 640px panel = clipped).
+	// Keep it absolutely positioned but reset left/transform and constrain to panel width.
 	const cssOverride = `<style>
 .canvas-container { overflow: hidden !important; }
 .canvas {
-  position: static !important;
-  left: auto !important;
+  left: 0 !important;
+  top: 0 !important;
   transform: none !important;
   width: 100% !important;
   height: auto !important;
