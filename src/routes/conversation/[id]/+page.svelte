@@ -640,7 +640,7 @@
 	</div>
 	{#if browserPanelState.debugUrl || browserPanelState.error}
 		<div
-			class="hidden h-full min-w-0 flex-1 basis-1/2 border-l border-gray-200 dark:border-gray-700 md:flex md:flex-col"
+			class="hidden h-full w-1/2 max-w-[640px] flex-none border-l border-gray-200 dark:border-gray-700 md:flex md:flex-col"
 		>
 			<BrowserPanel
 				debugUrl={browserPanelState.debugUrl}
