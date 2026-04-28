@@ -49,6 +49,27 @@
 	// Live browser panel state (Steel)
 	let browserPanelState = $state<BrowserPanelState>({});
 
+	// Resizable split between chat and browser panel
+	let splitPct = $state(35);
+	let resizing = $state(false);
+	let splitContainer = $state<HTMLDivElement | undefined>();
+
+	function startResize(e: MouseEvent) {
+		resizing = true;
+		e.preventDefault();
+	}
+
+	function onSplitMouseMove(e: MouseEvent) {
+		if (!resizing || !splitContainer) return;
+		const rect = splitContainer.getBoundingClientRect();
+		const pct = ((e.clientX - rect.left) / rect.width) * 100;
+		splitPct = Math.max(15, Math.min(80, pct));
+	}
+
+	function stopResize() {
+		resizing = false;
+	}
+
 	let conversations = $state<typeof data.conversations>([]);
 	$effect(() => {
 		conversations = data.conversations;
@@ -614,18 +635,24 @@
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} onmousemove={onSplitMouseMove} onmouseup={stopResize} />
 
 <svelte:head>
 	<title>{title}</title>
 </svelte:head>
 
-<div class="flex h-full min-h-0 w-full min-w-0">
+<div
+	class="flex h-full min-h-0 w-full min-w-0 {resizing ? 'cursor-col-resize select-none' : ''}"
+	bind:this={splitContainer}
+>
 	<div
 		class="flex h-full min-h-0 min-w-0 flex-col {browserPanelState.debugUrl ||
 		browserPanelState.error
-			? 'hidden md:flex md:w-96 md:flex-none'
+			? ''
 			: 'flex-1'}"
+		style={browserPanelState.debugUrl || browserPanelState.error
+			? `width: ${splitPct}%; flex: none;`
+			: undefined}
 	>
 		<ChatWindow
 			loading={$loading}
@@ -644,9 +671,13 @@
 		/>
 	</div>
 	{#if browserPanelState.debugUrl || browserPanelState.error}
-		<div
-			class="flex h-full min-w-0 flex-1 flex-col border-l border-gray-200 dark:border-gray-700"
-		>
+		<button
+			type="button"
+			class="relative z-10 w-1 flex-none cursor-col-resize bg-gray-200 p-0 transition-colors hover:bg-blue-400 dark:bg-gray-700 dark:hover:bg-blue-500"
+			aria-label="Drag to resize panels"
+			onmousedown={startResize}
+		></button>
+		<div class="flex h-full min-w-0 flex-1 flex-col">
 			<BrowserPanel
 				debugUrl={browserPanelState.debugUrl}
 				url={browserPanelState.url}
