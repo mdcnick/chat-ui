@@ -621,7 +621,12 @@
 </svelte:head>
 
 <div class="flex h-full min-h-0 w-full min-w-0">
-	<div class="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+	<div
+		class="flex h-full min-h-0 min-w-0 flex-col {browserPanelState.debugUrl ||
+		browserPanelState.error
+			? 'hidden md:flex md:w-96 md:flex-none'
+			: 'flex-1'}"
+	>
 		<ChatWindow
 			loading={$loading}
 			{pending}
@@ -640,7 +645,7 @@
 	</div>
 	{#if browserPanelState.debugUrl || browserPanelState.error}
 		<div
-			class="hidden h-full w-1/2 max-w-[640px] flex-none border-l border-gray-200 dark:border-gray-700 md:flex md:flex-col"
+			class="flex h-full min-w-0 flex-1 flex-col border-l border-gray-200 dark:border-gray-700"
 		>
 			<BrowserPanel
 				debugUrl={browserPanelState.debugUrl}

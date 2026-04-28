@@ -1,6 +1,9 @@
 <script lang="ts">
 	import CarbonClose from "~icons/carbon/close";
 	import CarbonRenew from "~icons/carbon/renew";
+	import CarbonArrowLeft from "~icons/carbon/arrow-left";
+	import CarbonArrowRight from "~icons/carbon/arrow-right";
+	import CarbonLocked from "~icons/carbon/locked";
 
 	interface Props {
 		debugUrl?: string;
@@ -35,6 +38,28 @@
 		panelError = IFRAME_LOAD_ERROR_MESSAGE;
 	}
 
+	function handleBack() {
+		const win = (
+			document.querySelector('iframe[title="Live Browser"]') as HTMLIFrameElement | null
+		)?.contentWindow;
+		try {
+			win?.history.back();
+		} catch {
+			/* cross-origin */
+		}
+	}
+
+	function handleForward() {
+		const win = (
+			document.querySelector('iframe[title="Live Browser"]') as HTMLIFrameElement | null
+		)?.contentWindow;
+		try {
+			win?.history.forward();
+		} catch {
+			/* cross-origin */
+		}
+	}
+
 	function handleReload() {
 		if (!debugUrl) {
 			return;
@@ -51,31 +76,72 @@
 </script>
 
 <div class="flex h-full w-full flex-col bg-white dark:bg-gray-900">
-	<div class="flex items-center gap-2 border-b border-gray-200 px-3 py-2 dark:border-gray-700">
-		<div class="flex min-w-0 flex-1 items-center gap-2">
-			<span class="truncate text-xs text-gray-500 dark:text-gray-400">{headerLabel}</span>
-		</div>
-		<div class="flex items-center gap-1">
-			{#if canRetry}
-				<button
-					type="button"
-					class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-					onclick={handleReload}
-					aria-label="Reload browser"
-					title="Reload"
-				>
-					<CarbonRenew class="size-4" />
-				</button>
-			{/if}
+	<div
+		class="flex items-center gap-1 border-b border-gray-200 bg-gray-100 px-2 pt-2 dark:border-gray-700 dark:bg-gray-800"
+	>
+		<div
+			class="flex min-w-0 max-w-xs flex-1 items-center gap-2 rounded-t-lg border border-b-0 border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
+		>
+			<div
+				class="flex size-4 flex-none items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700"
+			>
+				<span class="text-[8px] font-bold text-gray-500 dark:text-gray-400">G</span>
+			</div>
+			<span class="min-w-0 flex-1 truncate text-xs text-gray-700 dark:text-gray-200"
+				>{headerLabel}</span
+			>
 			<button
 				type="button"
-				class="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+				class="flex size-4 flex-none items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
 				onclick={onClose}
-				aria-label="Close browser panel"
+				aria-label="Close tab"
 				title="Close"
 			>
-				<CarbonClose class="size-4" />
+				<CarbonClose class="size-3" />
 			</button>
+		</div>
+		<div class="flex-1"></div>
+	</div>
+	<div
+		class="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
+	>
+		<button
+			type="button"
+			class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+			onclick={handleBack}
+			disabled={!canRetry}
+			aria-label="Back"
+			title="Back"
+		>
+			<CarbonArrowLeft class="size-4" />
+		</button>
+		<button
+			type="button"
+			class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+			onclick={handleForward}
+			disabled={!canRetry}
+			aria-label="Forward"
+			title="Forward"
+		>
+			<CarbonArrowRight class="size-4" />
+		</button>
+		<button
+			type="button"
+			class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+			onclick={handleReload}
+			disabled={!canRetry}
+			aria-label="Reload browser"
+			title="Reload"
+		>
+			<CarbonRenew class="size-4" />
+		</button>
+		<div
+			class="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 dark:bg-gray-800"
+		>
+			<CarbonLocked class="size-3 flex-none text-green-600 dark:text-green-500" />
+			<span class="min-w-0 flex-1 truncate text-xs text-gray-700 dark:text-gray-200"
+				>{headerLabel}</span
+			>
 		</div>
 	</div>
 
