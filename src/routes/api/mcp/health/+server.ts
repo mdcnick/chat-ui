@@ -62,7 +62,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					logger.debug({}, "[MCP Health] injected Exa API key");
 				}
 			}
-		} catch {
+		} catch (error) {
+			logger.warn({ url, err: String(error) }, "[MCP Health] Exa API key injection failed");
 			// best-effort injection
 		}
 
@@ -87,7 +88,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			if (shouldForward && !hasAuth && isHfMcpTarget && hasNonEmptyToken(userToken)) {
 				headersRecord["Authorization"] = `Bearer ${userToken}`;
 			}
-		} catch {
+		} catch (error) {
+			logger.warn({ url, err: String(error) }, "[MCP Health] HF token overlay failed");
 			// best-effort overlay
 		}
 

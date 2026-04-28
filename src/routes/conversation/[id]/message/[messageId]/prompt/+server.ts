@@ -2,6 +2,7 @@ import { buildPrompt } from "$lib/buildPrompt";
 import { authCondition } from "$lib/server/auth";
 import { collections } from "$lib/server/database";
 import { models } from "$lib/server/models";
+import { logger } from "$lib/server/logger";
 import { buildSubtree } from "$lib/utils/tree/buildSubtree";
 import { isMessageId } from "$lib/utils/tree/isMessageId";
 import { error } from "@sveltejs/kit";
@@ -43,7 +44,10 @@ export async function GET({ params, locals }) {
 		messages: messagesUpTo,
 		model,
 	}).catch((err) => {
-		console.error(err);
+		logger.error(
+			{ err: String(err), messageId: params.messageId, conversationId: params.id },
+			"[prompt] buildPrompt failed"
+		);
 		return "Prompt generation failed";
 	});
 

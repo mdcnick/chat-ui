@@ -71,7 +71,11 @@ export const GET: RequestHandler = async ({ locals }) => {
 								try {
 									const fileData = await downloadFile(hash, conversation._id);
 									return fileData;
-								} catch {
+								} catch (error) {
+									logger.warn(
+										{ hash, conversationId: conversation._id.toString(), err: String(error) },
+										"[export] failed to download file, omitting from export"
+									);
 									return null;
 								}
 							})

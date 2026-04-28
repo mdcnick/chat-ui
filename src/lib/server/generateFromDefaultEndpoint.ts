@@ -1,6 +1,7 @@
 import { taskModel, models } from "$lib/server/models";
 import { MessageUpdateType, type MessageUpdate } from "$lib/types/MessageUpdate";
 import type { EndpointMessage } from "./endpoints/endpoints";
+import { logger } from "$lib/server/logger";
 
 export async function* generateFromDefaultEndpoint({
 	messages,
@@ -39,6 +40,10 @@ export async function* generateFromDefaultEndpoint({
 			};
 		}
 	} catch (error) {
+		logger.error(
+			{ err: String(error), modelId, preprompt: !!preprompt },
+			"[generate] endpoint generation failed"
+		);
 		return "";
 	}
 

@@ -31,7 +31,9 @@ import { buildImageRefResolver } from "./fileRefs";
 import { prepareMessagesWithFiles } from "$lib/server/textGeneration/utils/prepareFiles";
 import { makeImageProcessor } from "$lib/server/endpoints/images";
 import { logger } from "$lib/server/logger";
-import { AbortedGenerations } from "$lib/server/abortedGenerations";
+import { isAbortError, createAbortChecker } from "$lib/server/mcp/abort";
+import { processToolOutput } from "$lib/server/mcp/toolResult";
+import { getMcpToolTimeoutMs } from "$lib/server/mcp/httpClient";
 import { canUseHermesTools } from "$lib/server/billing/entitlements";
 import { PaidFeatureRequiredError } from "$lib/server/billing/errors";
 import { randomUUID } from "crypto";
@@ -76,29 +78,21 @@ export async function* runMcpFlow({
 
 	// Helper to check if generation should be aborted via DB polling
 	// Also triggers the abort controller to cancel active streams/requests
-	const checkAborted = (): boolean => {
-		if (abortSignal?.aborted) return true;
-		const abortTime = AbortedGenerations.getInstance().getAbortTime(conversationId);
-		if (abortTime && promptedAt && abortTime > promptedAt) {
-			// Trigger the abort controller to cancel active streams
-			if (abortController && !abortController.signal.aborted) {
-				abortController.abort();
-			}
-			return true;
-		}
-		return false;
-	};
+	const checkAborted = createAbortChecker({
+		conversationId,
+		abortSignal,
+		abortController,
+		promptedAt,
+	});
 
 	// Conversation-scoped Steel browser session reuse.
 	// debugUrl is the live Steel stream and should be reused rather than regenerated per navigation.
 	// Start from env-configured servers
 	let servers = getMcpServers();
-	try {
-		logger.debug(
-			{ baseServers: servers.map((s) => ({ name: s.name, url: s.url })), count: servers.length },
-			"[mcp] base servers loaded"
-		);
-	} catch {}
+	logger.debug(
+		{ baseServers: servers.map((s) => ({ name: s.name, url: s.url })), count: servers.length },
+		"[mcp] base servers loaded"
+	);
 
 	// Merge in request-provided custom servers (if any)
 	try {
@@ -122,19 +116,17 @@ export async function* runMcpFlow({
 			for (const s of servers) byName.set(s.name, s);
 			for (const s of custom) byName.set(s.name, s);
 			servers = [...byName.values()];
-			try {
-				logger.debug(
-					{
-						customProvidedCount: custom.length,
-						mergedServers: servers.map((s) => ({
-							name: s.name,
-							url: s.url,
-							hasAuth: !!s.headers?.Authorization,
-						})),
-					},
-					"[mcp] merged request-provided servers"
-				);
-			} catch {}
+			logger.debug(
+				{
+					customProvidedCount: custom.length,
+					mergedServers: servers.map((s) => ({
+						name: s.name,
+						url: s.url,
+						hasAuth: !!s.headers?.Authorization,
+					})),
+				},
+				"[mcp] merged request-provided servers"
+			);
 		}
 
 		// If the client specified a selection by name, filter to those
@@ -144,15 +136,13 @@ export async function* runMcpFlow({
 		if (Array.isArray(names)) {
 			const before = servers.map((s) => s.name);
 			servers = servers.filter((s) => names.includes(s.name));
-			try {
-				logger.debug(
-					{ selectedNames: names, before, after: servers.map((s) => s.name) },
-					"[mcp] applied name selection"
-				);
-			} catch {}
+			logger.debug(
+				{ selectedNames: names, before, after: servers.map((s) => s.name) },
+				"[mcp] applied name selection"
+			);
 		}
-	} catch {
-		// ignore selection merge errors and proceed with env servers
+	} catch (err) {
+		logger.warn({ err: String(err) }, "[mcp] server selection merge failed");
 	}
 
 	// If no external MCP servers, only continue when Steel browser tools are available.
@@ -171,15 +161,13 @@ export async function* runMcpFlow({
 				return false;
 			}
 		});
-		try {
-			const rejected = before.filter((b) => !servers.includes(b));
-			if (rejected.length > 0) {
-				logger.warn(
-					{ rejected: rejected.map((r) => ({ name: r.name, url: r.url })) },
-					"[mcp] rejected servers by URL safety"
-				);
-			}
-		} catch {}
+		const rejected = before.filter((b) => !servers.includes(b));
+		if (rejected.length > 0) {
+			logger.warn(
+				{ rejected: rejected.map((r) => ({ name: r.name, url: r.url })) },
+				"[mcp] rejected servers by URL safety"
+			);
+		}
 	}
 	if (servers.length === 0 && !isSteelConfigured()) {
 		logger.warn({}, "[mcp] all selected MCP servers rejected by URL safety guard");
@@ -211,19 +199,19 @@ export async function* runMcpFlow({
 							headers: { ...(s.headers ?? {}), Authorization: `Bearer ${userToken}` },
 						};
 					}
-				} catch {
+				} catch (error) {
+					logger.warn(
+						{ server: s.name, url: s.url, err: String(error) },
+						"[mcp] HF token overlay URL parse failed for server"
+					);
 					// ignore URL parse errors and leave server unchanged
 				}
 				return s;
 			});
-			if (overlayApplied.length > 0) {
-				try {
-					logger.debug({ overlayApplied }, "[mcp] forwarded HF token to servers");
-				} catch {}
-			}
+			logger.debug({ overlayApplied }, "[mcp] forwarded HF token to servers");
 		}
-	} catch {
-		// best-effort overlay; continue if anything goes wrong
+	} catch (err) {
+		logger.warn({ err: String(err) }, "[mcp] HF token overlay failed");
 	}
 
 	// Inject Exa API key for mcp.exa.ai servers via URL param (mcp.exa.ai doesn't support headers)
@@ -241,15 +229,20 @@ export async function* runMcpFlow({
 							return { ...s, url: url.toString() };
 						}
 					}
-				} catch {}
+				} catch (error) {
+					logger.warn(
+						{ server: s.name, url: s.url, err: String(error) },
+						"[mcp] Exa key injection URL parse failed for server"
+					);
+				}
 				return s;
 			});
 			if (overlayApplied.length > 0) {
 				logger.debug({ overlayApplied }, "[mcp] injected Exa API key to servers");
 			}
 		}
-	} catch {
-		// best-effort injection; continue if anything goes wrong
+	} catch (err) {
+		logger.warn({ err: String(err) }, "[mcp] Exa API key injection failed");
 	}
 
 	logger.debug(
@@ -280,7 +273,11 @@ export async function* runMcpFlow({
 			);
 			return "not_applicable";
 		}
-	} catch {
+	} catch (error) {
+		logger.warn(
+			{ err: String(error), model: model.id ?? model.name },
+			"[mcp] tools gate check failed, proceeding with MCP flow"
+		);
 		// If anything goes wrong reading the flag, proceed (previous behavior)
 	}
 
@@ -472,13 +469,6 @@ export async function* runMcpFlow({
 				return {};
 			}
 		};
-
-		const processToolOutput = (
-			text: string
-		): {
-			annotated: string;
-			sources: { index: number; link: string }[];
-		} => ({ annotated: text, sources: [] });
 
 		let lastAssistantContent = "";
 		let streamedContent = false;
@@ -945,6 +935,16 @@ export async function* runMcpFlow({
 
 				// Execute external MCP tool calls via HTTP transport.
 				if (mcpCalls.length > 0) {
+					logger.info(
+						{
+							loop,
+							conversationId,
+							mcpToolNames: mcpCalls.map((c) => c.name),
+							totalTools: mcpCalls.length + browserCalls.length,
+						},
+						"[mcp] dispatching tool calls"
+					);
+
 					const exec = executeToolCalls({
 						calls: mcpCalls,
 						mapping,
@@ -953,6 +953,7 @@ export async function* runMcpFlow({
 						resolveFileRef,
 						toPrimitive,
 						processToolOutput,
+						toolTimeoutMs: getMcpToolTimeoutMs(),
 						abortSignal,
 					});
 					for await (const event of exec) {
@@ -1027,7 +1028,6 @@ export async function* runMcpFlow({
 		}
 		logger.warn({}, "[mcp] exceeded tool-followup loops; falling back");
 	} catch (err) {
-		const msg = String(err ?? "");
 		const errObj = err as Record<string, unknown>;
 		const statusCode =
 			(typeof errObj.statusCode === "number" ? errObj.statusCode : undefined) ||
@@ -1035,17 +1035,12 @@ export async function* runMcpFlow({
 		if (statusCode === 402 || err instanceof PaidFeatureRequiredError) {
 			throw err;
 		}
-		const isAbort =
-			(abortSignal && abortSignal.aborted) ||
-			msg.includes("AbortError") ||
-			msg.includes("APIUserAbortError") ||
-			msg.includes("Request was aborted");
-		if (isAbort) {
+		if (isAbortError(err) || (abortSignal && abortSignal.aborted)) {
 			// Expected on user stop; keep logs quiet and do not treat as error
 			logger.debug({}, "[mcp] aborted by user");
 			return "aborted";
 		}
-		logger.warn({ err: msg }, "[mcp] flow failed, falling back to default endpoint");
+		logger.warn({ err: String(err) }, "[mcp] flow failed, falling back to default endpoint");
 	} finally {
 		// ensure MCP clients are closed after the turn; conversation-scoped browser sessions stay open
 		// until explicit close or idle cleanup in the session store.

@@ -1,4 +1,5 @@
 import type { RequestHandler } from "@sveltejs/kit";
+import { logger } from "$lib/server/logger";
 import { superjsonResponse } from "$lib/server/api/utils/superjsonResponse";
 import type { GETModelsResponse } from "$lib/server/api/types";
 
@@ -32,7 +33,8 @@ export const GET: RequestHandler = async () => {
 					isRouter: model.isRouter,
 				})) satisfies GETModelsResponse
 		);
-	} catch {
+	} catch (error) {
+		logger.error({ err: String(error) }, "[api] failed to load model list");
 		return superjsonResponse([] as GETModelsResponse);
 	}
 };

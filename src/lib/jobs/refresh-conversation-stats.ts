@@ -17,6 +17,8 @@ async function shouldComputeStats(): Promise<boolean> {
 }
 
 export async function computeAllStats() {
+	logger.info({ spans: ["day", "week", "month"] }, "[stats] starting computation cycle");
+
 	for (const span of ["day", "week", "month"] as const) {
 		computeStats({ dateField: "updatedAt", type: "conversation", span }).catch((e) =>
 			logger.error(e, "Error computing conversation stats for updatedAt")
@@ -270,11 +272,15 @@ async function maintainLock() {
 		hasLock = await refreshLock(Semaphores.CONVERSATION_STATS, lockId);
 
 		if (!hasLock) {
+			logger.warn({ lockId: lockId.toString() }, "[stats] lost distributed lock");
 			lockId = null;
 		}
 	} else if (!hasLock) {
 		lockId = (await acquireLock(Semaphores.CONVERSATION_STATS)) || null;
 		hasLock = !!lockId;
+		if (hasLock && lockId) {
+			logger.info({ lockId: lockId.toString() }, "[stats] acquired distributed lock");
+		}
 	}
 
 	setTimeout(maintainLock, 10_000);
@@ -290,6 +296,7 @@ export function refreshConversationStats() {
 
 		setInterval(async () => {
 			if (await shouldComputeStats()) {
+				logger.info({}, "[stats] 24h interval triggered computation");
 				computeAllStats();
 			}
 		}, 24 * ONE_HOUR_MS);

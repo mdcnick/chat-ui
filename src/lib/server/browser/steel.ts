@@ -32,7 +32,8 @@ export function rewriteDebugUrl(original: string): string {
 		url.hostname = prefix.hostname;
 		url.port = prefix.port;
 		return url.toString();
-	} catch {
+	} catch (error) {
+		logger.warn({ original, err: String(error) }, "[steel] URL rewrite failed, using original");
 		return original;
 	}
 }
@@ -47,7 +48,8 @@ function rewriteWebsocketUrl(original: string): string {
 		url.hostname = base.hostname;
 		url.port = base.port;
 		return url.toString();
-	} catch {
+	} catch (error) {
+		logger.warn({ original, err: String(error) }, "[steel] URL rewrite failed, using original");
 		return original;
 	}
 }
@@ -215,7 +217,12 @@ export async function clickInSession(
 		await page.click(selector, { timeout: BROWSER_ACTION_TIMEOUT_MS });
 		await page
 			.waitForLoadState("domcontentloaded", { timeout: BROWSER_ACTION_TIMEOUT_MS })
-			.catch(() => {});
+			.catch((err) => {
+				logger.warn(
+					{ selector, err: String(err) },
+					"[steel] waitForLoadState timed out, proceeding anyway"
+				);
+			});
 		return { url: page.url() };
 	} finally {
 		await browser.close();

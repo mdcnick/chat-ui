@@ -75,7 +75,11 @@ async function listServerTools(
 				fetch: ssrfSafeFetch,
 			});
 			await client.connect(transport);
-		} catch {
+		} catch (error) {
+			logger.warn(
+				{ server: server.name, url: server.url, err: String(error) },
+				"[mcp] HTTP transport failed, falling back to SSE"
+			);
 			const transport = new SSEClientTransport(url, {
 				requestInit: { headers: server.headers, signal: opts.signal },
 				fetch: ssrfSafeFetch,
@@ -85,23 +89,21 @@ async function listServerTools(
 
 		const response = await client.listTools({});
 		const tools = Array.isArray(response?.tools) ? (response.tools as ListedTool[]) : [];
-		try {
-			logger.debug(
-				{
-					server: server.name,
-					url: server.url,
-					count: tools.length,
-					toolNames: tools.map((t) => t?.name).filter(Boolean),
-				},
-				"[mcp] listed tools from server"
-			);
-		} catch {}
+		logger.debug(
+			{
+				server: server.name,
+				url: server.url,
+				count: tools.length,
+				toolNames: tools.map((t) => t?.name).filter(Boolean),
+			},
+			"[mcp] listed tools from server"
+		);
 		return tools;
 	} finally {
 		try {
 			await client.close?.();
 		} catch {
-			// ignore close errors
+			// Intentionally ignore close errors: this is a cleanup path; throwing would mask the real result.
 		}
 	}
 }

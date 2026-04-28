@@ -177,7 +177,13 @@ export async function executeBrowserTool(
 			// Limit to 3 000 chars — enough to identify interactive elements.
 			const bodyText: string = await page
 				.evaluate(() => (document.body as HTMLElement).innerText ?? "")
-				.catch(() => "");
+				.catch((err) => {
+					logger.warn(
+						{ conversationId, err: String(err) },
+						"[browser] page.evaluate innerText failed"
+					);
+					return "";
+				});
 			const visibleText = bodyText.replace(/\s+/g, " ").trim().slice(0, 3000);
 			logger.debug({ conversationId, url: pageUrl }, "[browser] screenshot taken");
 			return {

@@ -383,7 +383,11 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 				let openaiModelIds: string[];
 				try {
 					openaiModelIds = JSON5.parse(sanitizeJSONEnv(openaiModelsEnv, "[]"));
-				} catch {
+				} catch (error) {
+					logger.warn(
+						{ err: String(error), envVar: "OPENAI_MODELS" },
+						`[models] failed to parse env var as JSON5, falling back to comma-split`
+					);
 					openaiModelIds = openaiModelsEnv
 						.split(",")
 						.map((s) => s.trim())
@@ -452,7 +456,11 @@ const buildModels = async (): Promise<ProcessedModel[]> => {
 			let opencodeModelIds: string[];
 			try {
 				opencodeModelIds = JSON5.parse(sanitizeJSONEnv(opencodeModelsEnv, "[]"));
-			} catch {
+			} catch (error) {
+				logger.warn(
+					{ err: String(error), envVar: "OPENCODE_MODELS" },
+					`[models] failed to parse env var as JSON5, falling back to comma-split`
+				);
 				opencodeModelIds = opencodeModelsEnv
 					.split(",")
 					.map((s) => s.trim())

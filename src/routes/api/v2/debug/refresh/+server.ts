@@ -1,4 +1,5 @@
 import type { RequestHandler } from "@sveltejs/kit";
+import { logger } from "$lib/server/logger";
 import { superjsonResponse } from "$lib/server/api/utils/superjsonResponse";
 import { config } from "$lib/server/config";
 import { requireAdmin } from "$lib/server/api/utils/requireAuth";
@@ -11,7 +12,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(body);
-	} catch {
+	} catch (error) {
+		logger.warn({ err: String(error), base }, "[debug] failed to parse upstream /models response");
 		parsed = undefined;
 	}
 	return superjsonResponse({

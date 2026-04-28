@@ -35,7 +35,8 @@ export const load: PageLoad = async ({ params, depends, fetch, url, parent }) =>
 					.post({ shareId: params.id })
 					.then(handleResponse);
 				importedConversationId = result.conversationId;
-			} catch {
+			} catch (error) {
+				console.warn("[import-share] Import failed for shareId:", params.id, error);
 				// Import failed, continue to load shared conversation for viewing
 			}
 
