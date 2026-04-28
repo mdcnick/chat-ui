@@ -21,12 +21,12 @@
 	let settings = useSettingsStore();
 
 	const sectionCardClass =
-		"overflow-hidden rounded-[28px] border border-gray-200/80 bg-white/85 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700/80 dark:bg-gray-800/85 dark:shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_rgba(0,0,0,0.28)]";
+		"overflow-hidden rounded-xl border border-gray-200/60 bg-white/70 shadow-sm backdrop-blur dark:border-gray-700/60 dark:bg-gray-800/70 dark:shadow-md";
 	const sectionHeaderClass =
-		"border-b border-gray-200/70 px-5 py-4 dark:border-gray-700/70 sm:px-6";
-	const sectionBodyClass = "p-3 sm:p-4";
+		"border-b border-gray-200/60 px-4 py-3 dark:border-gray-700/60 sm:px-5";
+	const sectionBodyClass = "p-2 sm:p-3";
 	const rowClass =
-		"flex flex-col gap-3 rounded-[22px] px-4 py-4 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-700/30 sm:flex-row sm:items-center sm:justify-between";
+		"flex flex-col gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-gray-50/60 dark:hover:bg-gray-700/20 sm:flex-row sm:items-center sm:justify-between";
 	const rowLabelClass = "min-w-0 flex-1";
 	const rowTitleClass = "text-sm font-semibold text-gray-900 dark:text-gray-100";
 	const rowBodyClass = "mt-1 text-sm text-gray-500 dark:text-gray-400";
@@ -35,7 +35,7 @@
 	const secondaryButtonClass =
 		"inline-flex min-h-10 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600";
 	const linkRowClass =
-		"flex items-center justify-between gap-3 rounded-[20px] px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50/80 dark:text-gray-300 dark:hover:bg-gray-700/30";
+		"flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50/80 dark:text-gray-300 dark:hover:bg-gray-700/30";
 
 	const authProviderLabels = {
 		"better-auth": "Email",
@@ -187,23 +187,19 @@
 	</div>
 
 	<section class={sectionCardClass}>
-		<div class="relative overflow-hidden px-5 py-5 sm:px-6 sm:py-6">
-			<div
-				class="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_58%),radial-gradient(circle_at_top_right,rgba(15,23,42,0.08),transparent_45%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_55%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.04),transparent_45%)]"
-			></div>
-
+		<div class="relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
 			{#if user}
 				<div class="relative flex flex-col gap-5">
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
 						{#if user.avatarUrl}
 							<img
 								src={user.avatarUrl}
+								class="size-14 rounded-lg border border-gray-200 object-cover shadow-sm dark:border-gray-600"
 								alt={accountDisplayName}
-								class="size-16 rounded-[22px] border border-gray-200 object-cover shadow-sm dark:border-gray-600"
 							/>
 						{:else}
 							<div
-								class="flex size-16 items-center justify-center rounded-[22px] bg-gray-900 text-xl font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
+								class="flex size-14 items-center justify-center rounded-lg bg-gray-900 text-lg font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
 							>
 								{accountInitial}
 							</div>
@@ -211,12 +207,12 @@
 
 						<div class="min-w-0 flex-1">
 							<p
-								class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
+								class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400"
 							>
 								Account
 							</p>
-							<h2 class="mt-2 truncate text-2xl font-semibold text-gray-900 dark:text-gray-100">
-								{accountDisplayName}
+							<h2 class="mt-1 truncate text-xl font-semibold text-gray-900 dark:text-gray-100">
+							{accountDisplayName}
 							</h2>
 							{#if accountSecondaryLabel}
 								<p class="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">
@@ -228,7 +224,7 @@
 							</p>
 						</div>
 
-						<div class="flex flex-wrap gap-2 sm:max-w-[18rem] sm:justify-end">
+						<div class="flex flex-wrap gap-2 sm:max-w-[16rem] sm:justify-end">
 							<span
 								class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {providerBadgeClass}"
 							>
@@ -260,7 +256,7 @@
 					</div>
 
 					<div
-						class="flex flex-col gap-3 border-t border-gray-200/70 pt-4 dark:border-gray-700/70 sm:flex-row sm:items-center sm:justify-between"
+						class="flex flex-col gap-3 border-t border-gray-200/60 pt-3 dark:border-gray-700/60 sm:flex-row sm:items-center sm:justify-between"
 					>
 						<div
 							class="flex min-h-10 flex-col justify-center text-sm text-gray-500 dark:text-gray-400"
@@ -310,9 +306,9 @@
 			{:else}
 				<div class="relative flex flex-col gap-5">
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-						<div
-							class="flex size-16 items-center justify-center rounded-[22px] bg-gray-900 text-xl font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
-						>
+							<div
+								class="flex size-14 items-center justify-center rounded-lg bg-gray-900 text-lg font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
+							>
 							?
 						</div>
 
@@ -344,10 +340,10 @@
 						</p>
 
 						{#if page.data.loginEnabled}
-							<a
-								href={loginHref}
-								class="inline-flex min-h-10 items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-							>
+								<a
+									href={loginHref}
+									class="inline-flex min-h-9 items-center justify-center rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+								>
 								Sign in
 							</a>
 						{/if}
@@ -540,7 +536,7 @@
 						<input
 							type="password"
 							class="h-10 min-w-[12rem] rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-sm outline-none transition-colors focus:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-gray-500"
-							value={getOpencodeApiKey()}
+								value={getOpencodeApiKey()}
 							oninput={(e) => setOpencodeApiKey(e.currentTarget.value)}
 							placeholder="sk-..."
 						/>
@@ -621,9 +617,8 @@
 							<CarbonArrowUpRight class="shrink-0 text-base text-gray-400" />
 						</a>
 					{/if}
-
 					{#if OPENAI_BASE_URL !== null}
-						<div class="rounded-[20px] px-4 py-3">
+						<div class="rounded-xl px-4 py-3">
 							<div class="text-sm font-medium text-gray-900 dark:text-gray-100">API Base URL</div>
 							<code class="mt-1 block break-all text-xs text-gray-500 dark:text-gray-400">
 								{OPENAI_BASE_URL}
@@ -636,7 +631,7 @@
 	{/if}
 
 	<section
-		class="overflow-hidden rounded-[28px] border border-red-200/70 bg-red-50/60 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_18px_40px_rgba(127,29,29,0.06)] dark:border-red-900/60 dark:bg-red-950/20 dark:shadow-[0_1px_0_rgba(255,255,255,0.02)_inset,0_18px_40px_rgba(0,0,0,0.28)]"
+		class="overflow-hidden rounded-xl border border-red-200/60 bg-red-50/40 shadow-sm dark:border-red-900/50 dark:bg-red-950/15 dark:shadow-md"
 	>
 		<div class="border-b border-red-200/70 px-5 py-4 dark:border-red-900/50 sm:px-6">
 			<p
@@ -650,9 +645,9 @@
 			</p>
 		</div>
 		<div class="p-3 sm:p-4">
-			<div
-				class="flex flex-col gap-3 rounded-[22px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-			>
+				<div
+					class="flex flex-col gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+				>
 				<div class="min-w-0 flex-1">
 					<div class="text-sm font-semibold text-red-900 dark:text-red-100">
 						Delete all conversations

@@ -289,16 +289,16 @@
 			aria-label="Custom system prompt"
 			rows="8"
 			disabled={!getCustomPromptEnabled()}
-			class="scrollbar-custom w-full resize-none rounded-md border border-gray-200 bg-gray-50 p-2 text-[13px] transition-opacity dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+			class="scrollbar-custom w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] transition-opacity dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
 			class:opacity-30={!getCustomPromptEnabled()}
 			bind:value={getCustomPrompt, setCustomPrompt}
 		></textarea>
 		<!-- Capabilities -->
 		<div
-			class="mt-3 rounded-xl border border-gray-200 bg-white px-3 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+			class="mt-3 rounded-2xl border border-gray-200 bg-white px-4 shadow-md dark:border-gray-700 dark:bg-gray-800"
 		>
 			<div class="divide-y divide-gray-200 dark:divide-gray-700">
-				<div class="flex items-start justify-between py-3">
+				<div class="flex items-start justify-between gap-4 rounded-xl px-1 py-3 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-700/30">
 					<div>
 						<div class="text-[13px] font-medium text-gray-800 dark:text-gray-200">
 							Tool calling (functions)
@@ -310,7 +310,7 @@
 					<Switch name="forceTools" bind:checked={getToolsOverride, setToolsOverride} />
 				</div>
 
-				<div class="flex items-start justify-between py-3">
+				<div class="flex items-start justify-between gap-4 rounded-xl px-1 py-3 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-700/30">
 					<div>
 						<div class="text-[13px] font-medium text-gray-800 dark:text-gray-200">
 							Multimodal support (image inputs)
@@ -326,7 +326,7 @@
 				</div>
 
 				{#if model?.isRouter}
-					<div class="flex items-start justify-between py-3">
+					<div class="flex items-start justify-between gap-4 rounded-xl px-1 py-3 transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-700/30">
 						<div>
 							<div class="text-[13px] font-medium text-gray-800 dark:text-gray-200">
 								Hide prompt examples
@@ -346,7 +346,7 @@
 
 		{#if publicConfig.isHuggingChat && model.providers?.length && !model?.isRouter}
 			<div
-				class="mt-3 flex flex-col items-start gap-2.5 rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+				class="mt-3 flex flex-col items-start gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-md dark:border-gray-700 dark:bg-gray-800"
 			>
 				<div>
 					<div class="text-[13px] font-medium text-gray-800 dark:text-gray-200">
