@@ -9,6 +9,7 @@ export const BROWSER_TOOL_NAMES = new Set([
 	"browser_click",
 	"browser_type",
 	"browser_extract",
+	"browser_scroll",
 ]);
 
 export const browserToolDefinitions: OpenAiTool[] = [
@@ -17,7 +18,7 @@ export const browserToolDefinitions: OpenAiTool[] = [
 		function: {
 			name: "browser_navigate",
 			description:
-				"Navigate the live browser to a URL or perform a Google search. Use this to open a page before using other browser tools.",
+				"Navigate the live browser to a URL or perform a Google search. Always follow with browser_screenshot to observe the result, then continue clicking or typing to complete the task.",
 			parameters: {
 				type: "object",
 				properties: {
@@ -38,7 +39,7 @@ export const browserToolDefinitions: OpenAiTool[] = [
 		function: {
 			name: "browser_screenshot",
 			description:
-				"Take a screenshot of the current browser page and return it as a base64 PNG image so you can see what is displayed.",
+				"Observe the current browser page as a PNG image. Use this to see the page state, then immediately continue the task by clicking, typing, or navigating — do not stop here to summarize.",
 			parameters: {
 				type: "object",
 				properties: {},
@@ -100,6 +101,32 @@ export const browserToolDefinitions: OpenAiTool[] = [
 			},
 		},
 	},
+	{
+		type: "function",
+		function: {
+			name: "browser_scroll",
+			description:
+				"Scroll the page or a specific element. Use to reveal content below the fold before clicking or extracting.",
+			parameters: {
+				type: "object",
+				properties: {
+					direction: {
+						type: "string",
+						enum: ["down", "up", "left", "right"],
+						description: "Scroll direction (default: down)",
+					},
+					amount: {
+						type: "number",
+						description: "Pixels to scroll (default: 500)",
+					},
+					selector: {
+						type: "string",
+						description: "CSS selector of a scrollable element (defaults to window)",
+					},
+				},
+			},
+		},
+	},
 ];
 
 const SCREENSHOT_TIMEOUT_MS = 10_000;
@@ -115,12 +142,18 @@ export async function executeBrowserTool(
 	conversationId: string
 ): Promise<BrowserToolResult> {
 	if (toolName === "browser_navigate") {
-		// Navigation and session creation are handled upstream in runMcpFlow before this call.
-		// Return a confirmation so the tool message is not empty.
+		// Session creation is handled upstream in runMcpFlow (navCall block) before this call.
+		// If no session exists here, Steel failed — return an error so the LLM can report it.
+		const session = browserSessionStore.get(conversationId);
 		const url = typeof args.url === "string" ? args.url : undefined;
 		const query = typeof args.query === "string" ? args.query : undefined;
 		const target =
 			url ?? (query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : "");
+		if (!session) {
+			return {
+				text: `Error: Could not start a browser session for "${target}". The browser service may be unavailable — please try again.`,
+			};
+		}
 		return { text: `Navigated to: ${target}` };
 	}
 
@@ -140,9 +173,15 @@ export async function executeBrowserTool(
 			const b64 = buf.toString("base64");
 			const pageUrl = page.url();
 			const title = await page.title();
+			// Extract visible text so the LLM can see page content even without vision.
+			// Limit to 3 000 chars — enough to identify interactive elements.
+			const bodyText: string = await page
+				.evaluate(() => (document.body as HTMLElement).innerText ?? "")
+				.catch(() => "");
+			const visibleText = bodyText.replace(/\s+/g, " ").trim().slice(0, 3000);
 			logger.debug({ conversationId, url: pageUrl }, "[browser] screenshot taken");
 			return {
-				text: `Screenshot of "${title}" at ${pageUrl}`,
+				text: `Page: "${title}" at ${pageUrl}\n\nVisible content:\n${visibleText || "(empty page)"}`,
 				imageData: `data:image/png;base64,${b64}`,
 			};
 		} finally {
@@ -189,6 +228,32 @@ export async function executeBrowserTool(
 		const selector = typeof args.selector === "string" ? args.selector : undefined;
 		const result = await extractFromSession(session.websocketUrl, selector);
 		return { text: result.text || "(no text content found)" };
+	}
+
+	if (toolName === "browser_scroll") {
+		const direction = typeof args.direction === "string" ? args.direction : "down";
+		const amount = typeof args.amount === "number" ? args.amount : 500;
+		const selector = typeof args.selector === "string" ? args.selector : undefined;
+
+		const browser = await connectToSteelSession(session.websocketUrl);
+		try {
+			const context = browser.contexts()[0] ?? (await browser.newContext());
+			const page = context.pages()[0] ?? (await context.newPage());
+
+			const dx = direction === "left" ? -amount : direction === "right" ? amount : 0;
+			const dy = direction === "up" ? -amount : direction === "down" ? amount : 0;
+
+			if (selector) {
+				await page
+					.locator(selector)
+					.evaluate((el, [x, y]) => el.scrollBy(x as number, y as number), [dx, dy]);
+			} else {
+				await page.mouse.wheel(dx, dy);
+			}
+			return { text: `Scrolled ${direction} by ${amount}px. Page: ${page.url()}` };
+		} finally {
+			await browser.close();
+		}
 	}
 
 	return { text: `Unknown browser tool: ${toolName}` };

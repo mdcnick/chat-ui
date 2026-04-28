@@ -36,6 +36,7 @@ import { canUseHermesTools } from "$lib/server/billing/entitlements";
 import { PaidFeatureRequiredError } from "$lib/server/billing/errors";
 import { randomUUID } from "crypto";
 import { ToolResultStatus } from "$lib/types/Tool";
+import { env } from "$env/dynamic/private";
 import { browserSessionStore } from "$lib/server/browser/sessionStore";
 import { shouldOpenBrowserPanel, isSteelConfigured } from "$lib/server/browser/steel";
 import {
@@ -154,8 +155,8 @@ export async function* runMcpFlow({
 		// ignore selection merge errors and proceed with env servers
 	}
 
-	// If selection/merge yielded no servers, bail early with clearer log
-	if (servers.length === 0) {
+	// If no external MCP servers, only continue when Steel browser tools are available.
+	if (servers.length === 0 && !isSteelConfigured()) {
 		logger.warn({}, "[mcp] no MCP servers selected after merge/name filter");
 		return "not_applicable";
 	}
@@ -180,7 +181,7 @@ export async function* runMcpFlow({
 			}
 		} catch {}
 	}
-	if (servers.length === 0) {
+	if (servers.length === 0 && !isSteelConfigured()) {
 		logger.warn({}, "[mcp] all selected MCP servers rejected by URL safety guard");
 		return "not_applicable";
 	}
@@ -318,6 +319,19 @@ export async function* runMcpFlow({
 		const { tools: oaTools, mapping } = await getOpenAiToolsForMcp(servers, {
 			signal: abortSignal,
 		});
+
+		// Inject built-in browser action tools BEFORE the empty-check so Steel works without
+		// any external MCP servers configured.
+		if (isSteelConfigured()) {
+			for (const tool of browserToolDefinitions) {
+				oaTools.push(tool);
+			}
+			logger.debug(
+				{ injectedCount: browserToolDefinitions.length },
+				"[mcp] injected browser action tools"
+			);
+		}
+
 		try {
 			logger.info(
 				{ toolCount: oaTools.length, toolNames: oaTools.map((t) => t.function.name) },
@@ -327,17 +341,6 @@ export async function* runMcpFlow({
 		if (oaTools.length === 0) {
 			logger.warn({}, "[mcp] zero tools available after listing; skipping MCP flow");
 			return "not_applicable";
-		}
-
-		// Inject built-in browser action tools when Steel is configured
-		if (isSteelConfigured()) {
-			for (const tool of browserToolDefinitions) {
-				oaTools.push(tool);
-			}
-			logger.debug(
-				{ injectedCount: browserToolDefinitions.length },
-				"[mcp] injected browser action tools"
-			);
 		}
 
 		const { OpenAI } = await import("openai");
@@ -505,8 +508,26 @@ export async function* runMcpFlow({
 			lastAssistantContent = "";
 			streamedContent = false;
 
+			// If tool messages contain browser screenshots, override the model with a vision-capable one.
+			const hasToolImages = messagesOpenAI.some(
+				(m) =>
+					m.role === "tool" &&
+					Array.isArray(m.content) &&
+					(m.content as Array<{ type?: string }>).some((c) => c.type === "image_url")
+			);
+			const visionOverride = hasToolImages
+				? env.STEEL_VISION_MODEL || env.LLM_ROUTER_MULTIMODAL_MODEL || undefined
+				: undefined;
+			if (visionOverride) {
+				logger.debug(
+					{ model: visionOverride },
+					"[mcp] vision override: switching model for screenshot turn"
+				);
+			}
+
 			const completionRequest: ChatCompletionCreateParamsStreaming = {
 				...completionBase,
+				...(visionOverride ? { model: visionOverride } : {}),
 				messages: messagesOpenAI,
 			};
 
@@ -721,6 +742,10 @@ export async function* runMcpFlow({
 				const browserCalls = calls.filter((c) => BROWSER_TOOL_NAMES.has(c.name));
 				const mcpCalls = calls.filter((c) => !BROWSER_TOOL_NAMES.has(c.name));
 
+				// Track whether we've emitted a Browser panel update this turn.
+				// Used to fall back to re-opening the panel if the LLM skips navigate.
+				let browserPanelUpdateEmitted = false;
+
 				// Open or reuse a conversation-scoped live browser panel.
 				// browser_navigate is handled below; pattern-matched MCP tools are handled here.
 				const matchingMcpCall = mcpCalls.find((c) => shouldOpenBrowserPanel(c.name));
@@ -767,6 +792,7 @@ export async function* runMcpFlow({
 								debugUrl: createdSession.debugUrl,
 								url: resolvedUrl,
 							};
+							browserPanelUpdateEmitted = true;
 						} else {
 							logger.warn(
 								{
@@ -783,6 +809,7 @@ export async function* runMcpFlow({
 								url: resolvedUrl,
 								message: "Couldn’t open the browser panel. Try again.",
 							};
+							browserPanelUpdateEmitted = true;
 						}
 					}
 				}
@@ -801,25 +828,35 @@ export async function* runMcpFlow({
 					const existingSession = browserSessionStore.get(conversationId);
 
 					if (existingSession) {
-						const reusedSession = await browserSessionStore.navigate(conversationId, {
-							url: navUrl,
-							query: navQuery,
-						});
-						if (reusedSession) {
+						let reusedSession: typeof existingSession | null = null;
+						try {
+							reusedSession = await browserSessionStore.navigate(conversationId, {
+								url: navUrl,
+								query: navQuery,
+							});
+						} catch (navErr) {
+							logger.warn(
+								{ conversationId, err: String(navErr) },
+								"[mcp] navigate threw; falling back to existing session"
+							);
+						}
+						const sessionForPanel = reusedSession ?? existingSession;
+						if (sessionForPanel.debugUrl) {
 							yield {
 								type: MessageUpdateType.Browser,
 								status: "navigate",
-								sessionId: reusedSession.sessionId,
-								debugUrl: reusedSession.debugUrl,
+								sessionId: sessionForPanel.sessionId,
+								debugUrl: sessionForPanel.debugUrl,
 								url: resolvedNavUrl,
 							};
+							browserPanelUpdateEmitted = true;
 						}
 					} else {
 						const createdSession = await browserSessionStore.getOrCreate(conversationId, {
 							url: navUrl,
 							query: navQuery,
 						});
-						if (createdSession) {
+						if (createdSession?.debugUrl) {
 							yield {
 								type: MessageUpdateType.Browser,
 								status: "open",
@@ -827,11 +864,18 @@ export async function* runMcpFlow({
 								debugUrl: createdSession.debugUrl,
 								url: resolvedNavUrl,
 							};
+							browserPanelUpdateEmitted = true;
 						} else {
 							logger.warn(
 								{ conversationId, hasUrl: Boolean(navUrl), hasQuery: Boolean(navQuery) },
 								"[mcp] failed to create browser session for browser_navigate"
 							);
+							yield {
+								type: MessageUpdateType.Browser,
+								status: "error",
+								message: "Couldn't start the browser. Please check the Steel configuration.",
+							};
+							browserPanelUpdateEmitted = true;
 						}
 					}
 				}
@@ -875,20 +919,9 @@ export async function* runMcpFlow({
 								display: true,
 							},
 						};
-						if (result.imageData) {
-							// OpenAI API supports image_url in tool message content for vision models;
-							// the SDK TypeScript types are overly restrictive here.
-							allToolMessages.push({
-								role: "tool",
-								tool_call_id: call.id,
-								content: [
-									{ type: "text", text: result.text },
-									{ type: "image_url", image_url: { url: result.imageData } },
-								],
-							} as unknown as ChatCompletionMessageParam);
-						} else {
-							allToolMessages.push({ role: "tool", tool_call_id: call.id, content: result.text });
-						}
+						// OpenAI tool role only supports text content; image_url is rejected silently.
+						// imageData is used by the UI to show the screenshot — not sent to the LLM.
+						allToolMessages.push({ role: "tool", tool_call_id: call.id, content: result.text });
 					} catch (err) {
 						const errMsg = err instanceof Error ? err.message : String(err);
 						yield {
@@ -934,6 +967,22 @@ export async function* runMcpFlow({
 							logger.info({ loop }, "[mcp] aborting during tool execution");
 							return "aborted";
 						}
+					}
+				}
+
+				// Fallback: if browser tools ran but we never opened/updated the panel (e.g.
+				// LLM skipped browser_navigate and used screenshot/click on a session from a
+				// prior turn), emit Browser.open now so the iframe becomes visible.
+				if (browserCalls.length > 0 && !browserPanelUpdateEmitted) {
+					const fallbackSession = browserSessionStore.get(conversationId);
+					if (fallbackSession?.debugUrl) {
+						yield {
+							type: MessageUpdateType.Browser,
+							status: "open",
+							sessionId: fallbackSession.sessionId,
+							debugUrl: fallbackSession.debugUrl,
+							url: undefined,
+						};
 					}
 				}
 

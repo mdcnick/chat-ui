@@ -1,11 +1,21 @@
 import type { OpenAiTool } from "$lib/server/mcp/tools";
 
+const BROWSER_TOOL_NAMES = new Set([
+	"browser_navigate",
+	"browser_screenshot",
+	"browser_click",
+	"browser_type",
+	"browser_extract",
+	"browser_scroll",
+]);
+
 export function buildToolPreprompt(tools: OpenAiTool[]): string {
 	if (!Array.isArray(tools) || tools.length === 0) return "";
 	const names = tools
 		.map((t) => (t?.function?.name ? String(t.function.name) : ""))
 		.filter((s) => s.length > 0);
 	if (names.length === 0) return "";
+	const hasBrowserTools = names.some((n) => BROWSER_TOOL_NAMES.has(n));
 	const now = new Date();
 	const currentDate = now.toLocaleDateString("en-US", {
 		year: "numeric",
@@ -13,7 +23,7 @@ export function buildToolPreprompt(tools: OpenAiTool[]): string {
 		day: "numeric",
 	});
 	const isoDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-	return [
+	const parts = [
 		`You have access to these tools: ${names.join(", ")}.`,
 		`Today's date: ${currentDate} (${isoDate}).`,
 		`IMPORTANT: Do NOT call a tool unless the user's request requires capabilities you lack (e.g., real-time data, image generation, code execution) or external information you do not have. For tasks like writing code, creative writing, math, or building apps, respond directly without tools. When in doubt, do not use a tool.`,
@@ -24,5 +34,19 @@ export function buildToolPreprompt(tools: OpenAiTool[]): string {
 		`If a tool generates an image, you can inline it directly: ![alt text](image_url).`,
 		`If a tool needs an image, set its image field ("input_image", "image", or "image_url") to a reference like "image_1", "image_2", etc. (ordered by when the user uploaded them).`,
 		`Default to image references; only use a full http(s) URL when the tool description explicitly asks for one, or reuse a URL a previous tool returned.`,
-	].join(" ");
+	];
+	if (hasBrowserTools) {
+		parts.push(
+			`BROWSER: You have a live browser you can fully control. NEVER say you cannot browse the internet, click buttons, scroll, or interact with websites — you CAN via the browser tools. ` +
+				`When asked to browse, search, click, scroll, fill a form, or interact with any web page, follow this loop until the task is fully complete: ` +
+				`(1) browser_navigate to open the page or search, ` +
+				`(2) browser_screenshot to observe the current state, ` +
+				`(3) browser_click or browser_type to interact, ` +
+				`(4) repeat screenshot → interact until done. ` +
+				`Do NOT stop after navigating or after a single screenshot — keep acting. ` +
+				`A screenshot is an observation step, not a stopping point. ` +
+				`Only summarize to the user once the full task is complete.`
+		);
+	}
+	return parts.join(" ");
 }

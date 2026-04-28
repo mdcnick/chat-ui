@@ -60,6 +60,7 @@ vi.mock("$lib/server/abortedGenerations", () => ({
 
 vi.mock("$lib/server/browser/steel", () => ({
 	shouldOpenBrowserPanel: shouldOpenBrowserPanelMock,
+	isSteelConfigured: () => false,
 }));
 
 vi.mock("$lib/server/browser/sessionStore", () => ({
