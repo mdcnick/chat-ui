@@ -589,7 +589,16 @@ const rebuildModels = async (): Promise<ModelsRefreshSummary> => {
 	return applyModelState(newModels, startedAt);
 };
 
-await rebuildModels();
+// Start model loading immediately but don't block module evaluation.
+// Consumers that need fully-loaded models should await modelsReady.
+const _initialLoad = rebuildModels().catch((err) => {
+	logger.error(err, "[models] Initial model load failed");
+	return lastModelRefreshSummary;
+});
+export const modelsReady: Promise<ModelsRefreshSummary> = _initialLoad;
+_initialLoad.then((summary) => {
+	logger.info({ total: summary.total }, "[models] Initial model load complete");
+});
 
 export const refreshModels = async (): Promise<ModelsRefreshSummary> => {
 	if (inflightRefresh) {
@@ -604,6 +613,9 @@ export const refreshModels = async (): Promise<ModelsRefreshSummary> => {
 };
 
 export const validateModel = (_models: BackendModel[]) => {
+	if (_models.length === 0) {
+		return z.string().refine(() => false, "No models available");
+	}
 	// Zod enum function requires 2 parameters
 	return z.enum([_models[0].id, ..._models.slice(1).map((m) => m.id)]);
 };

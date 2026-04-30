@@ -7,8 +7,7 @@
 
 	let loading = $state(false);
 
-	const containerClass =
-		"min-h-screen flex items-center justify-center bg-background p-4";
+	const containerClass = "min-h-screen flex items-center justify-center bg-background p-4";
 	const cardClass =
 		"w-full max-w-sm rounded-2xl border border-border bg-card/85 p-8 text-card-foreground shadow-2xl backdrop-blur";
 	const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
@@ -20,9 +19,7 @@
 
 <div class={containerClass}>
 	<div class={cardClass}>
-		<h1 class="mb-6 text-center text-xl font-semibold text-foreground">
-			Create your account
-		</h1>
+		<h1 class="mb-6 text-center text-xl font-semibold text-foreground">Create your account</h1>
 
 		<p class="mb-6 text-center text-sm text-muted-foreground">
 			No email required. Pick a PIN and you're in.
@@ -37,9 +34,7 @@
 		{/if}
 
 		{#if !data.loginEnabled}
-			<p class="text-center text-sm text-muted-foreground">
-				Registration is not configured.
-			</p>
+			<p class="text-center text-sm text-muted-foreground">Registration is not configured.</p>
 		{:else}
 			<form
 				method="POST"
@@ -79,9 +74,9 @@
 						autocomplete="new-password"
 						inputmode="numeric"
 						pattern="[0-9]*"
-					maxlength="10"
-					minlength="10"
-					placeholder="10 digits"
+						maxlength="10"
+						minlength="10"
+						placeholder="10 digits"
 						required
 					/>
 				</div>
@@ -96,9 +91,9 @@
 						autocomplete="new-password"
 						inputmode="numeric"
 						pattern="[0-9]*"
-					maxlength="10"
-					minlength="10"
-					placeholder="Re-enter 10-digit PIN"
+						maxlength="10"
+						minlength="10"
+						placeholder="Re-enter 10-digit PIN"
 						required
 					/>
 				</div>
@@ -131,12 +126,7 @@
 
 			<p class="mt-6 text-center text-sm text-muted-foreground">
 				Already have an account?
-				<a
-					href="{base}/login"
-					class="font-medium text-primary hover:underline"
-				>
-					Sign in →
-				</a>
+				<a href="{base}/login" class="font-medium text-primary hover:underline"> Sign in → </a>
 			</p>
 		{/if}
 	</div>

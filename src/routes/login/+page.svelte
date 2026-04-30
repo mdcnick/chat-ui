@@ -7,8 +7,7 @@
 
 	let loading = $state(false);
 
-	const containerClass =
-		"min-h-screen flex items-center justify-center bg-background p-4";
+	const containerClass = "min-h-screen flex items-center justify-center bg-background p-4";
 	const cardClass =
 		"w-full max-w-sm rounded-2xl border border-border bg-card/85 p-8 text-card-foreground shadow-2xl backdrop-blur";
 	const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
@@ -20,9 +19,7 @@
 
 <div class={containerClass}>
 	<div class={cardClass}>
-		<h1 class="mb-6 text-center text-xl font-semibold text-foreground">
-			Sign in
-		</h1>
+		<h1 class="mb-6 text-center text-xl font-semibold text-foreground">Sign in</h1>
 
 		{#if data.error || form?.error}
 			<div
@@ -39,9 +36,7 @@
 		{/if}
 
 		{#if !data.loginEnabled}
-			<p class="text-center text-sm text-muted-foreground">
-				Login is not configured.
-			</p>
+			<p class="text-center text-sm text-muted-foreground">Login is not configured.</p>
 		{:else}
 			<form
 				method="POST"
@@ -79,18 +74,18 @@
 						autocomplete="current-password"
 						inputmode="numeric"
 						pattern="[0-9]*"
-maxlength="10"
-minlength="10"
-placeholder="••••••••••"
+						maxlength="10"
+						minlength="10"
+						placeholder="••••••••••"
 					/>
-			</div>
+				</div>
 
-			<a
-				href="{base}/recovery"
-				class="mt-2 block text-center text-sm text-muted-foreground hover:underline"
-			>
-				Forgot PIN?
-			</a>
+				<a
+					href="{base}/recovery"
+					class="mt-2 block text-center text-sm text-muted-foreground hover:underline"
+				>
+					Forgot PIN?
+				</a>
 
 				<button class={primaryBtnClass} type="submit" disabled={loading}>
 					{#if loading}
@@ -104,10 +99,7 @@ placeholder="••••••••••"
 
 			<p class="mt-6 text-center text-sm text-muted-foreground">
 				New here?
-				<a
-					href="{base}/register"
-					class="font-medium text-primary hover:underline"
-				>
+				<a href="{base}/register" class="font-medium text-primary hover:underline">
 					Create an account →
 				</a>
 			</p>

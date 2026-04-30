@@ -11,6 +11,7 @@
 	import { getThemePreference, setTheme, type ThemePreference } from "$lib/switchTheme";
 	import type { StreamingMode } from "$lib/types/Settings";
 	import { supportsHaptics } from "$lib/utils/haptics";
+	import { getLoginUrl } from "$lib/utils/auth";
 	import { usePublicConfig } from "$lib/utils/PublicConfig.svelte";
 	import { onMount } from "svelte";
 	import CarbonArrowUpRight from "~icons/carbon/arrow-up-right";
@@ -21,24 +22,23 @@
 	let settings = useSettingsStore();
 
 	const sectionCardClass =
-		"overflow-hidden rounded-xl border border-gray-200/60 bg-white/70 shadow-sm backdrop-blur dark:border-gray-700/60 dark:bg-gray-800/70 dark:shadow-md";
-	const sectionHeaderClass =
-		"border-b border-gray-200/60 px-4 py-3 dark:border-gray-700/60 sm:px-5";
+		"overflow-hidden rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur";
+	const sectionHeaderClass = "border-b border-border/60 px-4 py-3 sm:px-5";
 	const sectionBodyClass = "p-2 sm:p-3";
 	const rowClass =
-		"flex flex-col gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-gray-50/60 dark:hover:bg-gray-700/20 sm:flex-row sm:items-center sm:justify-between";
+		"flex flex-col gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between";
 	const rowLabelClass = "min-w-0 flex-1";
-	const rowTitleClass = "text-sm font-semibold text-gray-900 dark:text-gray-100";
-	const rowBodyClass = "mt-1 text-sm text-gray-500 dark:text-gray-400";
+	const rowTitleClass = "text-sm font-semibold text-card-foreground";
+	const rowBodyClass = "mt-1 text-sm text-muted-foreground";
 	const selectClass =
-		"h-10 min-w-[9.5rem] rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-sm outline-none transition-colors focus:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-gray-500";
+		"h-10 min-w-[9.5rem] rounded-xl border border-input bg-card px-3 text-sm text-foreground shadow-sm outline-none transition-colors focus:border-primary/50";
 	const secondaryButtonClass =
-		"inline-flex min-h-10 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600";
+		"inline-flex min-h-10 items-center justify-center rounded-xl border border-input bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
 	const linkRowClass =
-		"flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-gray-600 transition-colors hover:bg-gray-50/80 dark:text-gray-300 dark:hover:bg-gray-700/30";
+		"flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-accent-foreground";
 
 	const authProviderLabels = {
-		"pin": "PIN",
+		pin: "PIN",
 		"better-auth": "Email",
 		"legacy-oidc": "Legacy OIDC",
 		"trusted-header": "Trusted Header",
@@ -113,10 +113,8 @@
 	const providerLabel = $derived(
 		getProviderLabel(user?.authProvider as keyof typeof authProviderLabels | undefined)
 	);
-	const providerBadgeClass = "bg-gray-900/6 text-gray-700 dark:bg-white/10 dark:text-gray-200";
-	const loginHref = $derived(
-		`${base}/login?next=${encodeURIComponent(page.url.pathname + page.url.search)}`
-	);
+	const providerBadgeClass = "bg-primary/6 text-muted-foreground";
+	const loginHref = $derived(getLoginUrl(page.url.pathname, page.url.search));
 	const billingOrganization = $derived($settings.billingOrganization ?? "");
 
 	let OPENAI_BASE_URL = $state<string | null>(null);
@@ -164,23 +162,21 @@
 	const shouldShowResources = $derived(
 		Boolean(
 			publicConfig.isHuggingChat ||
-				publicConfig.PUBLIC_COMMIT_SHA ||
-				OPENAI_BASE_URL ||
-				page.data.isAdmin
+			publicConfig.PUBLIC_COMMIT_SHA ||
+			OPENAI_BASE_URL ||
+			page.data.isAdmin
 		)
 	);
 </script>
 
 <div class="flex w-full flex-col gap-6 pb-2">
 	<div class="flex flex-col gap-2">
-		<p
-			class="text-[11px] font-semibold uppercase tracking-[0.28em] text-gray-500 dark:text-gray-400"
-		>
+		<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
 			Application Settings
 		</p>
 		<div>
-			<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Application Settings</h1>
-			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			<h1 class="text-2xl font-semibold text-card-foreground">Application Settings</h1>
+			<p class="mt-1 text-sm text-muted-foreground">
 				Manage the account this app uses, how chats behave, and the shared resources attached to
 				your workspace.
 			</p>
@@ -195,32 +191,30 @@
 						{#if user.avatarUrl}
 							<img
 								src={user.avatarUrl}
-								class="size-14 rounded-lg border border-gray-200 object-cover shadow-sm dark:border-gray-600"
+								class="size-14 rounded-lg border border-border object-cover shadow-sm"
 								alt={accountDisplayName}
 							/>
 						{:else}
 							<div
-								class="flex size-14 items-center justify-center rounded-lg bg-gray-900 text-lg font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
+								class="flex size-14 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground shadow-sm"
 							>
 								{accountInitial}
 							</div>
 						{/if}
 
 						<div class="min-w-0 flex-1">
-							<p
-								class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400"
-							>
+							<p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
 								Account
 							</p>
-							<h2 class="mt-1 truncate text-xl font-semibold text-gray-900 dark:text-gray-100">
-							{accountDisplayName}
+							<h2 class="mt-1 truncate text-xl font-semibold text-card-foreground">
+								{accountDisplayName}
 							</h2>
 							{#if accountSecondaryLabel}
-								<p class="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">
+								<p class="mt-1 truncate text-sm text-muted-foreground">
 									{accountSecondaryLabel}
 								</p>
 							{/if}
-							<p class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-300">
+							<p class="mt-3 max-w-2xl text-sm text-muted-foreground">
 								Your chats and preferences are synced to this account.
 							</p>
 						</div>
@@ -240,7 +234,7 @@
 							{/if}
 							{#if user.billing?.plan === "pro"}
 								<span
-									class="inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold text-white dark:bg-gray-100 dark:text-gray-900"
+									class="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
 								>
 									<IconPro classNames="!mr-0 !size-3.5" />
 									PRO
@@ -257,11 +251,9 @@
 					</div>
 
 					<div
-						class="flex flex-col gap-3 border-t border-gray-200/60 pt-3 dark:border-gray-700/60 sm:flex-row sm:items-center sm:justify-between"
+						class="flex flex-col gap-3 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between"
 					>
-						<div
-							class="flex min-h-10 flex-col justify-center text-sm text-gray-500 dark:text-gray-400"
-						>
+						<div class="flex min-h-10 flex-col justify-center text-sm text-muted-foreground">
 							{#if user.authProvider === "clerk"}
 								<p>Signed in with Clerk-backed authentication.</p>
 							{:else if user.authProvider}
@@ -270,7 +262,7 @@
 								<p>Signed in and syncing your app state to this account.</p>
 							{/if}
 							{#if refreshMessage}
-								<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{refreshMessage}</p>
+								<p class="mt-1 text-xs text-muted-foreground">{refreshMessage}</p>
 							{/if}
 						</div>
 
@@ -307,32 +299,30 @@
 			{:else}
 				<div class="relative flex flex-col gap-5">
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-							<div
-								class="flex size-14 items-center justify-center rounded-lg bg-gray-900 text-lg font-semibold text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
-							>
+						<div
+							class="flex size-14 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground shadow-sm"
+						>
 							?
 						</div>
 
 						<div class="min-w-0 flex-1">
 							<p
-								class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
+								class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground"
 							>
 								Account
 							</p>
-							<h2 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-								Create your account
-							</h2>
-							<p class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-300">
-								Create a free account with just a PIN to keep your chats and settings across browsers
-								and devices.
+							<h2 class="mt-2 text-2xl font-semibold text-card-foreground">Create your account</h2>
+							<p class="mt-3 max-w-2xl text-sm text-muted-foreground">
+								Create a free account with just a PIN to keep your chats and settings across
+								browsers and devices.
 							</p>
 						</div>
 					</div>
 
 					<div
-						class="flex flex-col gap-3 border-t border-gray-200/70 pt-4 dark:border-gray-700/70 sm:flex-row sm:items-center sm:justify-between"
+						class="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between"
 					>
-						<p class="min-h-10 text-sm text-gray-500 dark:text-gray-400">
+						<p class="min-h-10 text-sm text-muted-foreground">
 							{#if page.data.loginEnabled}
 								Use your PIN to sign in and continue where you left off.
 							{:else}
@@ -341,10 +331,10 @@
 						</p>
 
 						{#if page.data.loginEnabled}
-								<a
-									href={loginHref}
-									class="inline-flex min-h-9 items-center justify-center rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-								>
+							<a
+								href={loginHref}
+								class="inline-flex min-h-9 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:brightness-105"
+							>
 								Sign in
 							</a>
 						{/if}
@@ -356,13 +346,11 @@
 
 	<section class={sectionCardClass}>
 		<div class={sectionHeaderClass}>
-			<p
-				class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
-			>
+			<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
 				Preferences
 			</p>
-			<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">How chat behaves</h2>
-			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			<h2 class="mt-1 text-lg font-semibold text-card-foreground">How chat behaves</h2>
+			<p class="mt-1 text-sm text-muted-foreground">
 				These defaults apply across conversations in this app.
 			</p>
 		</div>
@@ -446,15 +434,11 @@
 	{#if publicConfig.isHuggingChat && user}
 		<section class={sectionCardClass}>
 			<div class={sectionHeaderClass}>
-				<p
-					class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
-				>
+				<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
 					Billing
 				</p>
-				<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
-					Usage and organizations
-				</h2>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<h2 class="mt-1 text-lg font-semibold text-card-foreground">Usage and organizations</h2>
+				<p class="mt-1 text-sm text-muted-foreground">
 					Select where provider usage is billed and review your inference provider activity.
 				</p>
 			</div>
@@ -469,7 +453,7 @@
 						</div>
 						<div class="flex min-h-10 items-center">
 							{#if billingOrgsLoading}
-								<span class="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
+								<span class="text-sm text-muted-foreground">Loading...</span>
 							{:else if billingOrgsError}
 								<span class="text-sm text-red-500">{billingOrgsError}</span>
 							{:else}
@@ -512,15 +496,11 @@
 
 	<section class={sectionCardClass}>
 		<div class={sectionHeaderClass}>
-			<p
-				class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
-			>
+			<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
 				API Keys
 			</p>
-			<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
-				Provider credentials
-			</h2>
-			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			<h2 class="mt-1 text-lg font-semibold text-card-foreground">Provider credentials</h2>
+			<p class="mt-1 text-sm text-muted-foreground">
 				Add your own API keys to override the default provider credentials.
 			</p>
 		</div>
@@ -536,8 +516,8 @@
 					<div class="flex min-h-10 items-center">
 						<input
 							type="password"
-							class="h-10 min-w-[12rem] rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-sm outline-none transition-colors focus:border-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-gray-500"
-								value={getOpencodeApiKey()}
+							class="h-10 min-w-[12rem] rounded-xl border border-input bg-card px-3 text-sm text-foreground shadow-sm outline-none transition-colors focus:border-primary/50"
+							value={getOpencodeApiKey()}
 							oninput={(e) => setOpencodeApiKey(e.currentTarget.value)}
 							placeholder="sk-..."
 						/>
@@ -550,15 +530,13 @@
 	{#if shouldShowResources}
 		<section class={sectionCardClass}>
 			<div class={sectionHeaderClass}>
-				<p
-					class="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-500 dark:text-gray-400"
-				>
+				<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
 					Resources
 				</p>
-				<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
+				<h2 class="mt-1 text-lg font-semibold text-card-foreground">
 					Links and environment details
 				</h2>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p class="mt-1 text-sm text-muted-foreground">
 					Reference links, deployment details, and lightweight diagnostics.
 				</p>
 			</div>
@@ -573,9 +551,9 @@
 						>
 							<span class="flex min-w-0 items-center gap-3">
 								<CarbonLogoGithub class="shrink-0 text-base" />
-								<span class="font-medium text-gray-900 dark:text-gray-100">GitHub repository</span>
+								<span class="font-medium text-card-foreground">GitHub repository</span>
 							</span>
-							<CarbonArrowUpRight class="shrink-0 text-base text-gray-400" />
+							<CarbonArrowUpRight class="shrink-0 text-base text-muted-foreground/80" />
 						</a>
 						<a
 							href="https://huggingface.co/spaces/huggingchat/chat-ui/discussions/764"
@@ -585,18 +563,18 @@
 						>
 							<span class="flex min-w-0 items-center gap-3">
 								<CarbonArrowUpRight class="shrink-0 text-base" />
-								<span class="font-medium text-gray-900 dark:text-gray-100">
+								<span class="font-medium text-card-foreground">
 									Share your feedback on HuggingChat
 								</span>
 							</span>
-							<CarbonArrowUpRight class="shrink-0 text-base text-gray-400" />
+							<CarbonArrowUpRight class="shrink-0 text-base text-muted-foreground/80" />
 						</a>
 						<a href={`${base}/privacy`} class={linkRowClass}>
 							<span class="flex min-w-0 items-center gap-3">
 								<CarbonArrowUpRight class="shrink-0 text-base" />
-								<span class="font-medium text-gray-900 dark:text-gray-100">About & Privacy</span>
+								<span class="font-medium text-card-foreground">About & Privacy</span>
 							</span>
-							<CarbonArrowUpRight class="shrink-0 text-base text-gray-400" />
+							<CarbonArrowUpRight class="shrink-0 text-base text-muted-foreground/80" />
 						</a>
 					{/if}
 
@@ -608,20 +586,18 @@
 							class={linkRowClass}
 						>
 							<span class="min-w-0">
-								<span class="block font-medium text-gray-900 dark:text-gray-100">
-									Latest deployment
-								</span>
-								<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+								<span class="block font-medium text-card-foreground"> Latest deployment </span>
+								<span class="mt-1 block text-xs text-muted-foreground">
 									Commit <code class="font-mono">{publicConfig.PUBLIC_COMMIT_SHA.slice(0, 7)}</code>
 								</span>
 							</span>
-							<CarbonArrowUpRight class="shrink-0 text-base text-gray-400" />
+							<CarbonArrowUpRight class="shrink-0 text-base text-muted-foreground/80" />
 						</a>
 					{/if}
 					{#if OPENAI_BASE_URL !== null}
 						<div class="rounded-xl px-4 py-3">
-							<div class="text-sm font-medium text-gray-900 dark:text-gray-100">API Base URL</div>
-							<code class="mt-1 block break-all text-xs text-gray-500 dark:text-gray-400">
+							<div class="text-sm font-medium text-card-foreground">API Base URL</div>
+							<code class="mt-1 block break-all text-xs text-muted-foreground">
 								{OPENAI_BASE_URL}
 							</code>
 						</div>
@@ -646,9 +622,9 @@
 			</p>
 		</div>
 		<div class="p-3 sm:p-4">
-				<div
-					class="flex flex-col gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-				>
+			<div
+				class="flex flex-col gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+			>
 				<div class="min-w-0 flex-1">
 					<div class="text-sm font-semibold text-red-900 dark:text-red-100">
 						Delete all conversations

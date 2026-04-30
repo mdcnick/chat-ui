@@ -319,7 +319,7 @@
 									/>
 								{:else if part && part.trim().length > 0}
 									<div
-										class="prose max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:rounded prose-code:bg-secondary/60 prose-code:px-1 prose-code:py-px prose-code:font-mono prose-code:text-[0.92em] prose-code:before:hidden prose-code:after:hidden prose-pre:bg-card prose-pre:text-card-foreground prose-pre:border prose-pre:border-sidebar-border/60 prose-img:my-0 prose-img:cursor-pointer prose-img:rounded-lg"
+										class="prose max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:rounded prose-code:bg-secondary/60 prose-code:px-1 prose-code:py-px prose-code:font-mono prose-code:text-[0.92em] prose-code:before:hidden prose-code:after:hidden prose-pre:border prose-pre:border-sidebar-border/60 prose-pre:bg-card prose-pre:text-card-foreground prose-img:my-0 prose-img:cursor-pointer prose-img:rounded-lg"
 									>
 										<MarkdownRenderer content={part} loading={isLast && loading} />
 									</div>
@@ -327,7 +327,7 @@
 							{/each}
 						{:else}
 							<div
-								class="prose max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:rounded prose-code:bg-secondary/60 prose-code:px-1 prose-code:py-px prose-code:font-mono prose-code:text-[0.92em] prose-code:before:hidden prose-code:after:hidden prose-pre:bg-card prose-pre:text-card-foreground prose-pre:border prose-pre:border-sidebar-border/60 prose-img:my-0 prose-img:cursor-pointer prose-img:rounded-lg"
+								class="prose max-w-none dark:prose-invert prose-headings:font-display prose-headings:tracking-tight prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:rounded prose-code:bg-secondary/60 prose-code:px-1 prose-code:py-px prose-code:font-mono prose-code:text-[0.92em] prose-code:before:hidden prose-code:after:hidden prose-pre:border prose-pre:border-sidebar-border/60 prose-pre:bg-card prose-pre:text-card-foreground prose-img:my-0 prose-img:cursor-pointer prose-img:rounded-lg"
 							>
 								<MarkdownRenderer content={block.content} loading={isLast && loading} />
 							</div>

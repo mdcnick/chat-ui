@@ -1,15 +1,15 @@
 import { collections } from "$lib/server/database";
 import { z } from "zod";
 import { authCondition } from "$lib/server/auth";
-import { DEFAULT_SETTINGS, type SettingsEditable } from "$lib/types/Settings";
+import { getDefaultSettings, type SettingsEditable } from "$lib/types/Settings";
 import { resolveStreamingMode } from "$lib/utils/messageUpdates";
 
 const settingsSchema = z.object({
 	shareConversationsWithModelAuthors: z
 		.boolean()
-		.default(DEFAULT_SETTINGS.shareConversationsWithModelAuthors),
+		.default(() => getDefaultSettings().shareConversationsWithModelAuthors),
 	welcomeModalSeen: z.boolean().optional(),
-	activeModel: z.string().default(DEFAULT_SETTINGS.activeModel),
+	activeModel: z.string().default(() => getDefaultSettings().activeModel),
 	customPrompts: z.record(z.string()).default({}),
 	customPromptsEnabled: z.record(z.boolean()).default({}),
 	multimodalOverrides: z.record(z.boolean()).default({}),

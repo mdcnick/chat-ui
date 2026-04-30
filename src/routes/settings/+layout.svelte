@@ -19,15 +19,14 @@
 
 <Modal
 	onclose={() => goto(previousPage)}
-	width="border dark:border-gray-700 h-[90dvh] w-[90dvw] pb-0 overflow-hidden rounded-2xl bg-white shadow-2xl outline-none dark:bg-gray-800 dark:text-gray-200 sm:h-[90dvh] xl:w-[920px] xl:h-[80dvh] 2xl:w-[980px] 2xl:h-[70dvh]"
+	width="border border-border h-[90dvh] w-[90dvw] pb-0 overflow-hidden rounded-2xl bg-card shadow-2xl outline-none text-foreground sm:h-[90dvh] xl:w-[920px] xl:h-[80dvh] 2xl:w-[980px] 2xl:h-[70dvh]"
 >
-	{@render children?.()}
 	{#if $settings.recentlySaved}
 		<div
-			class="absolute bottom-4 right-4 m-2 flex items-center gap-1.5 rounded-full border bg-black px-3 py-1 text-white dark:border-white/10 dark:bg-gray-700 dark:text-gray-100"
+			class="absolute bottom-4 right-4 m-2 flex items-center gap-1.5 rounded-full border bg-primary px-3 py-1 text-primary-foreground"
 		>
-			<CarbonCheckmark class="text-white" />
-			Saved
+			<CarbonCheckmark class="text-primary-foreground" />
 		</div>
 	{/if}
+	{@render children?.()}
 </Modal>

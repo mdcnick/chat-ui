@@ -800,7 +800,8 @@
 								</button>
 							{/if}
 							<button
-								class="btn absolute bottom-2 right-2 size-8 self-end rounded-full border transition-all sm:size-7 {!draft || isReadOnly
+								class="btn absolute bottom-2 right-2 size-8 self-end rounded-full border transition-all sm:size-7 {!draft ||
+								isReadOnly
 									? 'border-sidebar-border/70 bg-card/70 text-muted-foreground'
 									: 'border-primary/40 bg-primary text-primary-foreground shadow-glow-pink hover:brightness-105'}"
 								disabled={!draft || isReadOnly}

@@ -215,7 +215,6 @@
 			? ""
 			: conversations.find((conv) => conv.id === page.params.id)?.title
 	);
-
 </script>
 
 <svelte:head>
@@ -281,7 +280,7 @@
 <div
 	class="fixed grid h-dvh w-screen grid-cols-1 grid-rows-[auto,1fr] overflow-hidden text-smd {!isNavCollapsed
 		? 'md:grid-cols-[290px,1fr]'
-		: 'md:grid-cols-[0px,1fr]'} transition-[300ms] [transition-property:grid-template-columns] text-foreground md:grid-rows-[1fr]"
+		: 'md:grid-cols-[0px,1fr]'} text-foreground transition-[300ms] [transition-property:grid-template-columns] md:grid-rows-[1fr]"
 >
 	<ExpandNavigation
 		isCollapsed={isNavCollapsed}
@@ -329,7 +328,7 @@
 
 	{#if publicConfig.PUBLIC_PLAUSIBLE_SCRIPT_URL}
 		<script>
-			(window.plausible =
+			((window.plausible =
 				window.plausible ||
 				function () {
 					(plausible.q = plausible.q || []).push(arguments);
@@ -338,7 +337,7 @@
 					plausible.init ||
 					function (i) {
 						plausible.o = i || {};
-					});
+					}));
 			plausible.init();
 		</script>
 	{/if}

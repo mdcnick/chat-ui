@@ -77,9 +77,9 @@ export interface Settings extends Timestamps {
 
 export type SettingsEditable = Omit<Settings, "welcomeModalSeenAt" | "createdAt" | "updatedAt">;
 // TODO: move this to a constant file along with other constants
-export const DEFAULT_SETTINGS = {
+export const getDefaultSettings = (): SettingsEditable => ({
 	shareConversationsWithModelAuthors: true,
-	activeModel: defaultModel.id,
+	activeModel: defaultModel?.id ?? "",
 	customPrompts: {},
 	customPromptsEnabled: {},
 	multimodalOverrides: {},
@@ -89,4 +89,4 @@ export const DEFAULT_SETTINGS = {
 	streamingMode: "smooth",
 	directPaste: false,
 	hapticsEnabled: true,
-} satisfies SettingsEditable;
+});

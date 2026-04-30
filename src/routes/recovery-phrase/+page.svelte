@@ -6,8 +6,7 @@
 	let downloaded = $state(false);
 	let confirmed = $state(false);
 	let copied = $state(false);
-	const containerClass =
-		"min-h-screen flex items-center justify-center bg-background p-4";
+	const containerClass = "min-h-screen flex items-center justify-center bg-background p-4";
 	const cardClass =
 		"w-full max-w-lg rounded-2xl border border-border bg-card/85 p-8 text-card-foreground shadow-2xl backdrop-blur";
 
@@ -37,7 +36,12 @@
 			<div
 				class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
 			>
-				<svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<svg
+					class="h-5 w-5 text-amber-600 dark:text-amber-400"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
 					<path
 						stroke-linecap="round"
 						stroke-linejoin="round"
@@ -47,9 +51,7 @@
 				</svg>
 			</div>
 			<div>
-				<h1 class="text-lg font-semibold text-foreground">
-					Save your recovery phrase
-				</h1>
+				<h1 class="text-lg font-semibold text-foreground">Save your recovery phrase</h1>
 				<p class="mt-1 text-sm text-muted-foreground">
 					This is the <strong>only time</strong> you'll see these words. Save them somewhere safe.
 				</p>
@@ -60,12 +62,12 @@
 		<div
 			class="mb-6 rounded-xl border-2 border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
 		>
-			<p class="mb-2 text-xs font-medium uppercase tracking-wider text-amber-700 dark:text-amber-400">
+			<p
+				class="mb-2 text-xs font-medium uppercase tracking-wider text-amber-700 dark:text-amber-400"
+			>
 				Recovery Phrase
 			</p>
-			<p
-				class="select-all font-mono text-sm leading-relaxed text-foreground"
-			>
+			<p class="select-all font-mono text-sm leading-relaxed text-foreground">
 				{data.recoveryPhrase}
 			</p>
 		</div>
@@ -105,8 +107,7 @@
 					/>
 					<span class="text-sm text-muted-foreground">
 						I've saved my recovery phrase in a secure location.
-						<strong class="text-foreground"
-							>If you lose it, you cannot recover your account.</strong
+						<strong class="text-foreground">If you lose it, you cannot recover your account.</strong
 						>
 					</span>
 				</label>
@@ -132,9 +133,9 @@
 		<div class="mt-6 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
 			<h3 class="mb-1 text-sm font-medium text-blue-800 dark:text-blue-300">Why do I need this?</h3>
 			<p class="text-xs text-blue-700 dark:text-blue-400">
-				Your recovery phrase lets you reset your PIN if you forget it. We don't store it —
-				only you have it. Keep it somewhere safe, like a password manager or a piece of paper in
-				a locked drawer.
+				Your recovery phrase lets you reset your PIN if you forget it. We don't store it — only you
+				have it. Keep it somewhere safe, like a password manager or a piece of paper in a locked
+				drawer.
 			</p>
 		</div>
 	</div>

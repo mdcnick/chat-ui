@@ -59,16 +59,13 @@
 	});
 </script>
 
-<div
-	class="mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-2 pb-24 pt-12 sm:pt-16"
->
+<div class="mx-auto flex h-full w-full max-w-2xl flex-col justify-center px-2 pb-24 pt-12 sm:pt-16">
 	<div class="mb-9 flex flex-col gap-2">
-		<span
-			class="font-mono text-[11px] uppercase tracking-[0.32em] text-primary/70"
+		<span class="font-mono text-[11px] uppercase tracking-[0.32em] text-primary/70"
 			>welcome back, friend</span
 		>
 		<h1
-			class="font-display text-balance text-5xl leading-[1.05] tracking-tight text-foreground sm:text-6xl"
+			class="text-balance font-display text-5xl leading-[1.05] tracking-tight text-foreground sm:text-6xl"
 		>
 			How can I help you today<span class="text-primary">?</span>
 		</h1>
@@ -96,7 +93,9 @@
 		{/each}
 	</div>
 
-	<ul class="flex flex-col divide-y divide-sidebar-border/60 overflow-hidden rounded-2xl border border-sidebar-border/60 bg-card/40 backdrop-blur-sm">
+	<ul
+		class="flex flex-col divide-y divide-sidebar-border/60 overflow-hidden rounded-2xl border border-sidebar-border/60 bg-card/40 backdrop-blur-sm"
+	>
 		{#each activePrompts as prompt, idx}
 			<li>
 				<button
@@ -111,7 +110,7 @@
 					</span>
 					<span class="flex-1 leading-snug">{prompt}</span>
 					<span
-						class="text-primary opacity-0 transition-all group-hover/item:translate-x-0 group-hover/item:opacity-100 -translate-x-1"
+						class="-translate-x-1 text-primary opacity-0 transition-all group-hover/item:translate-x-0 group-hover/item:opacity-100"
 						aria-hidden="true">→</span
 					>
 				</button>

@@ -88,14 +88,7 @@ module.exports = {
 					"Arial",
 					"sans-serif",
 				],
-				display: [
-					"Instrument Serif",
-					"ui-serif",
-					"Georgia",
-					"Cambria",
-					"Times New Roman",
-					"serif",
-				],
+				display: ["Instrument Serif", "ui-serif", "Georgia", "Cambria", "Times New Roman", "serif"],
 				mono: [
 					"JetBrains Mono",
 					"ui-monospace",
@@ -107,6 +100,8 @@ module.exports = {
 				],
 			},
 			boxShadow: {
+				"glow-ember": "0 10px 40px -12px oklch(var(--primary) / 0.45)",
+				"inset-ember": "inset 0 0 0 1px oklch(var(--primary) / 0.18)",
 				"glow-pink": "0 10px 40px -12px oklch(var(--primary) / 0.45)",
 				"inset-pink": "inset 0 0 0 1px oklch(var(--primary) / 0.18)",
 			},

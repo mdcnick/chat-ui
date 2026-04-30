@@ -1,24 +1,20 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { base } from "$app/paths";
-	import type { ActionData, PageData } from "./$types";
+	import type { ActionData } from "./$types";
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { form }: { form: ActionData } = $props();
 
 	let loading = $state(false);
 
-	const containerClass =
-		"min-h-screen flex items-center justify-center bg-background p-4";
+	const containerClass = "min-h-screen flex items-center justify-center bg-background p-4";
 	const cardClass =
 		"w-full max-w-lg rounded-2xl border border-border bg-card/85 p-8 text-card-foreground shadow-2xl backdrop-blur";
 	const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
 	const inputClass =
 		"w-full rounded-xl border border-input bg-background px-3 py-2 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring";
-	const primaryBtnClass =
-		"inline-flex w-full items-center justify-center rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50";
 	const dangerBtnClass =
 		"inline-flex w-full items-center justify-center rounded-xl bg-destructive/15 border border-destructive/40 px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/25 disabled:opacity-50";
-
 </script>
 
 <div class={containerClass}>
@@ -28,7 +24,12 @@
 				<div
 					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
 				>
-					<svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<svg
+						class="h-6 w-6 text-green-600 dark:text-green-400"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -37,9 +38,7 @@
 						/>
 					</svg>
 				</div>
-				<h1 class="mb-2 text-xl font-semibold text-foreground">
-					PIN Reset Successful
-				</h1>
+				<h1 class="mb-2 text-xl font-semibold text-foreground">PIN Reset Successful</h1>
 				<p class="text-sm text-muted-foreground">
 					Your PIN has been changed. You can now sign in with your new PIN.
 				</p>
@@ -51,9 +50,7 @@
 				</a>
 			</div>
 		{:else}
-			<h1 class="mb-6 text-center text-xl font-semibold text-foreground">
-				Reset PIN
-			</h1>
+			<h1 class="mb-6 text-center text-xl font-semibold text-foreground">Reset PIN</h1>
 
 			<p class="mb-6 text-sm text-muted-foreground">
 				Enter your 12-word recovery phrase to set a new PIN.
@@ -77,7 +74,7 @@
 						await update();
 					};
 				}}
->
+			>
 				<div class="mb-4">
 					<label class={labelClass} for="recoveryPhrase"
 						>Recovery Phrase

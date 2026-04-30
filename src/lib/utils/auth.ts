@@ -8,10 +8,15 @@ import { page } from "$app/state";
  */
 export function requireAuthUser(): boolean {
 	if (page.data.loginEnabled && !page.data.user) {
-		const next = page.url.pathname + page.url.search;
-		const url = `${base}/login?next=${encodeURIComponent(next)}`;
-		goto(url, { invalidateAll: true });
+		goto(getLoginUrl(page.url.pathname, page.url.search), { invalidateAll: true });
 		return true;
 	}
 	return false;
+}
+
+export function getLoginUrl(pathname: string, search: string): string {
+	if (pathname.startsWith(`${base}/login`)) {
+		return `${base}/login${search}`;
+	}
+	return `${base}/login?next=${encodeURIComponent(pathname + search)}`;
 }

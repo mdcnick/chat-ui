@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { config } from "$lib/server/config";
 import { collections } from "$lib/server/database";
-import { DEFAULT_SETTINGS } from "$lib/types/Settings";
+import { getDefaultSettings } from "$lib/types/Settings";
 import type { AuthProvider, User } from "$lib/types/User";
 import { sha256 } from "$lib/utils/sha256";
 import { logger } from "$lib/server/logger";
@@ -166,7 +166,7 @@ export async function syncAuthenticatedUser(params: {
 				userId: user._id,
 				updatedAt: now,
 				createdAt: now,
-				...DEFAULT_SETTINGS,
+				...getDefaultSettings(),
 			});
 		}
 	} else {

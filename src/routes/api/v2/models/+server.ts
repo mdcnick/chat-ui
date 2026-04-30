@@ -5,8 +5,10 @@ import type { GETModelsResponse } from "$lib/server/api/types";
 
 export const GET: RequestHandler = async () => {
 	try {
-		const { models } = await import("$lib/server/models");
-		return superjsonResponse(
+		const { models, modelsReady } = await import("$lib/server/models");
+		// Wait for initial model load to complete (non-blocking import, models may be empty)
+		await modelsReady;
+		const response = superjsonResponse(
 			models
 				.filter((m) => m.unlisted == false)
 				.map((model) => ({
@@ -33,6 +35,8 @@ export const GET: RequestHandler = async () => {
 					isRouter: model.isRouter,
 				})) satisfies GETModelsResponse
 		);
+		response.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+		return response;
 	} catch (error) {
 		logger.error({ err: String(error) }, "[api] failed to load model list");
 		return superjsonResponse([] as GETModelsResponse);

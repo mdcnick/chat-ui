@@ -36,8 +36,8 @@
 			case "connecting":
 				return {
 					label: "Connecting...",
-					color: "text-blue-600 dark:text-blue-400",
-					bgColor: "bg-blue-100 dark:bg-blue-900/20",
+					color: "text-primary",
+					bgColor: "bg-primary/15",
 					icon: IconPending,
 				};
 			case "error":
@@ -51,8 +51,8 @@
 			default:
 				return {
 					label: "Unknown",
-					color: "text-gray-600 dark:text-gray-400",
-					bgColor: "bg-gray-100 dark:bg-gray-700",
+					color: "text-muted-foreground",
+					bgColor: "bg-muted",
 					icon: IconPending,
 				};
 		}
@@ -81,8 +81,8 @@
 
 <div
 	class="rounded-lg border bg-gradient-to-br transition-colors {isSelected
-		? 'border-blue-600/20 bg-blue-50 from-blue-500/5 to-transparent dark:border-blue-700/60 dark:bg-blue-900/10 dark:from-blue-900/20'
-		: 'border-gray-200 bg-white from-black/5 dark:border-gray-700 dark:bg-gray-800 dark:from-white/5'}"
+		? 'border-primary/20 bg-primary/5 from-primary/5 to-transparent'
+		: 'border-border bg-card from-black/5 dark:from-white/5'}"
 >
 	<div class="px-4 py-3.5">
 		<!-- Header -->
@@ -94,11 +94,11 @@
 						alt=""
 						class="size-4 flex-shrink-0 rounded"
 					/>
-					<h3 class="truncate font-semibold text-gray-900 dark:text-gray-100">
+					<h3 class="truncate font-semibold text-card-foreground">
 						{server.name}
 					</h3>
 				</div>
-				<p class="truncate text-sm text-gray-600 dark:text-gray-400">
+				<p class="truncate text-sm text-muted-foreground">
 					{server.url}
 				</p>
 			</div>
@@ -126,7 +126,7 @@
 				</span>
 
 				{#if server.tools && server.tools.length > 0}
-					<span class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+					<span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
 						<LucideHammer class="size-3" />
 						{server.tools.length}
 						{server.tools.length === 1 ? "tool" : "tools"}
@@ -139,7 +139,7 @@
 		{#if server.errorMessage}
 			<div class="mb-2 flex items-center gap-2">
 				<div
-					class="line-clamp-6 break-words rounded bg-red-50 px-2 py-1 text-xs text-red-800 dark:bg-red-900/20 dark:text-red-200"
+					class="line-clamp-6 break-words rounded bg-destructive/10 px-2 py-1 text-xs text-destructive"
 				>
 					{server.errorMessage}
 				</div>
@@ -151,7 +151,7 @@
 			<button
 				onclick={handleHealthCheck}
 				disabled={isLoadingHealth}
-				class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-[.29rem] text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+				class="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-[.29rem] text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
 			>
 				<IconRefresh class="size-3 {isLoadingHealth ? 'animate-spin' : ''}" />
 				Health Check
@@ -162,7 +162,7 @@
 					href="https://huggingface.co/settings/mcp"
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-[.29rem] text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+					class="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-[.29rem] text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 					aria-label="Open Hugging Face MCP settings"
 				>
 					<IconSettings class="size-3" />
@@ -173,7 +173,7 @@
 			{#if server.type === "custom"}
 				<button
 					onclick={handleDelete}
-					class="flex items-center gap-1.5 rounded-lg border border-red-500/15 bg-red-50 px-2.5 py-[.29rem] text-xs font-medium text-red-600 hover:bg-red-100 dark:border-red-500/25 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+					class="flex items-center gap-1.5 rounded-lg border border-destructive/15 bg-destructive/10 px-2.5 py-[.29rem] text-xs font-medium text-destructive hover:bg-destructive/20"
 				>
 					<IconTrash class="size-3" />
 					Delete
@@ -184,15 +184,15 @@
 		<!-- Tools List (Expandable) -->
 		{#if server.tools && server.tools.length > 0}
 			<details class="mt-3">
-				<summary class="cursor-pointer text-xs font-medium text-gray-700 dark:text-gray-300">
+				<summary class="cursor-pointer text-xs font-medium text-muted-foreground">
 					Available Tools ({server.tools.length})
 				</summary>
 				<ul class="mt-2 space-y-1 text-xs">
 					{#each server.tools as tool}
-						<li class="text-gray-600 dark:text-gray-400">
-							<span class="font-medium text-gray-900 dark:text-gray-100">{tool.name}</span>
+						<li class="text-muted-foreground">
+							<span class="font-medium text-card-foreground">{tool.name}</span>
 							{#if tool.description}
-								<span class="text-gray-500 dark:text-gray-500">- {tool.description}</span>
+								<span class="text-muted-foreground">- {tool.description}</span>
 							{/if}
 						</li>
 					{/each}

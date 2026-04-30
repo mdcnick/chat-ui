@@ -58,8 +58,8 @@
 	href="{base}/conversation/{conv.id}"
 	class="group relative flex h-[2.08rem] flex-none items-center gap-1.5 rounded-xl pl-3 pr-2 text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground max-sm:h-10
 		{conv.id === page.params.id
-			? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_oklch(var(--sidebar-primary))]'
-			: ''}"
+		? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_oklch(var(--sidebar-primary))]'
+		: ''}"
 	onclick={(e) => {
 		if (e.detail >= 2) {
 			e.preventDefault();

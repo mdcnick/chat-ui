@@ -5,6 +5,7 @@
 Chat UI is a SvelteKit 2 application that provides a chat interface for LLMs. It powers [HuggingChat](https://huggingface.co/chat) and is designed to work with any OpenAI-compatible API endpoint. The app supports streaming conversations, multimodal input, tool calling via MCP (Model Context Protocol), browser automation, server-side LLM routing, and Stripe billing integration.
 
 Key capabilities:
+
 - Conversational UI with streaming responses, message branching, and sharing
 - Model discovery from OpenAI-compatible `/models` endpoints
 - Server-side smart routing via an Arch router model (virtual "Omni" model)
@@ -37,19 +38,19 @@ Browser → SvelteKit SSR/CSR → Server Hooks → Auth → API Routes/Page Load
 
 ### Key Modules
 
-| Module | Purpose |
-|--------|---------|
-| `src/lib/server/auth.ts` | Authentication: Clerk integration, session cookies, `authCondition()` helper |
-| `src/lib/server/database.ts` | MongoDB singleton with typed collections + index initialization |
-| `src/lib/server/config.ts` | Config manager merging env vars with DB-overridden values |
-| `src/lib/server/endpoints/` | LLM endpoint abstractions (currently OpenAI-compatible) |
-| `src/lib/server/textGeneration/` | Streaming generation logic, reasoning extraction, abort handling |
-| `src/lib/server/mcp/` | MCP client pool, tool registry, HTTP client |
-| `src/lib/server/router/` | LLM router (Arch) integration: routing, multimodal, tools |
-| `src/lib/server/billing/` | Stripe integration, entitlements, paywall gating |
-| `src/lib/server/browser/` | Steel SDK browser automation, session store |
-| `src/lib/server/metrics.ts` | Prometheus metrics server (standalone on separate port) |
-| `src/lib/APIClient.ts` | Typed client for internal API v2 (browser + SSR safe) |
+| Module                           | Purpose                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `src/lib/server/auth.ts`         | Authentication: Clerk integration, session cookies, `authCondition()` helper |
+| `src/lib/server/database.ts`     | MongoDB singleton with typed collections + index initialization              |
+| `src/lib/server/config.ts`       | Config manager merging env vars with DB-overridden values                    |
+| `src/lib/server/endpoints/`      | LLM endpoint abstractions (currently OpenAI-compatible)                      |
+| `src/lib/server/textGeneration/` | Streaming generation logic, reasoning extraction, abort handling             |
+| `src/lib/server/mcp/`            | MCP client pool, tool registry, HTTP client                                  |
+| `src/lib/server/router/`         | LLM router (Arch) integration: routing, multimodal, tools                    |
+| `src/lib/server/billing/`        | Stripe integration, entitlements, paywall gating                             |
+| `src/lib/server/browser/`        | Steel SDK browser automation, session store                                  |
+| `src/lib/server/metrics.ts`      | Prometheus metrics server (standalone on separate port)                      |
+| `src/lib/APIClient.ts`           | Typed client for internal API v2 (browser + SSR safe)                        |
 
 ### Data Flow Patterns
 
@@ -169,18 +170,20 @@ npm run populate
 - **Strict mode** enabled (`tsconfig.json`)
 - **Target**: ES2018
 - **Svelte 5 runes** are the primary reactive pattern:
+
   ```svelte
   <script lang="ts">
-    let { data } = $props();
-    let count = $state(0);
-    let doubled = $derived(count * 2);
-    let input = $bindable("");
+  	let { data } = $props();
+  	let count = $state(0);
+  	let doubled = $derived(count * 2);
+  	let input = $bindable("");
 
-    $effect(() => {
-      console.log(count);
-    });
+  	$effect(() => {
+  		console.log(count);
+  	});
   </script>
   ```
+
 - Some legacy Svelte stores remain (e.g., `settings.ts`, `errors.ts`, `loading.ts`). New code should prefer runes.
 - **Path alias**: `$lib/*` maps to `src/lib/*`
 
@@ -243,39 +246,39 @@ import { dev } from "$app/environment";
 
 ## Important Files
 
-| File | Purpose |
-|------|---------|
-| `svelte.config.js` | Adapter selection (node vs static), paths, CSP, CSRF |
-| `vite.config.ts` | Vite plugins (SvelteKit, unplugin-icons, TTF loader), Vitest workspace config |
-| `tsconfig.json` | TypeScript strict config, extends `.svelte-kit/tsconfig.json` |
-| `tailwind.config.cjs` | Tailwind with custom colors, typography, scrollbar plugins |
-| `src/app.d.ts` | App.Locals, App.Error type definitions |
-| `src/app.html` | HTML template with dark-mode script and GA placeholder |
-| `src/hooks.server.ts` | Server init, handle, error, fetch hooks |
-| `src/lib/server/hooks/handle.ts` | Main request pipeline: auth, CSRF, CORS, session refresh |
-| `src/lib/server/database.ts` | MongoDB connection, collections, index setup |
-| `src/lib/server/config.ts` | Config manager: env vars + DB overrides + semaphore-based cache invalidation |
-| `src/lib/server/auth.ts` | Clerk auth, session management, `authCondition()` |
-| `src/lib/server/endpoints/endpoints.ts` | LLM endpoint registry and type definitions |
-| `src/lib/server/textGeneration/generate.ts` | Core streaming generation with reasoning support |
-| `src/lib/APIClient.ts` | Typed internal API client with superjson serialization |
-| `.env` / `.env.local` | Environment configuration (see README for full list) |
+| File                                        | Purpose                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------- |
+| `svelte.config.js`                          | Adapter selection (node vs static), paths, CSP, CSRF                          |
+| `vite.config.ts`                            | Vite plugins (SvelteKit, unplugin-icons, TTF loader), Vitest workspace config |
+| `tsconfig.json`                             | TypeScript strict config, extends `.svelte-kit/tsconfig.json`                 |
+| `tailwind.config.cjs`                       | Tailwind with custom colors, typography, scrollbar plugins                    |
+| `src/app.d.ts`                              | App.Locals, App.Error type definitions                                        |
+| `src/app.html`                              | HTML template with dark-mode script and GA placeholder                        |
+| `src/hooks.server.ts`                       | Server init, handle, error, fetch hooks                                       |
+| `src/lib/server/hooks/handle.ts`            | Main request pipeline: auth, CSRF, CORS, session refresh                      |
+| `src/lib/server/database.ts`                | MongoDB connection, collections, index setup                                  |
+| `src/lib/server/config.ts`                  | Config manager: env vars + DB overrides + semaphore-based cache invalidation  |
+| `src/lib/server/auth.ts`                    | Clerk auth, session management, `authCondition()`                             |
+| `src/lib/server/endpoints/endpoints.ts`     | LLM endpoint registry and type definitions                                    |
+| `src/lib/server/textGeneration/generate.ts` | Core streaming generation with reasoning support                              |
+| `src/lib/APIClient.ts`                      | Typed internal API client with superjson serialization                        |
+| `.env` / `.env.local`                       | Environment configuration (see README for full list)                          |
 
 ## Runtime/Tooling Preferences
 
-| Tool | Version/Spec |
-|------|-------------|
-| Runtime | Node.js 20+ (Docker: 22-alpine) |
-| Package manager | npm 9.5.0 (enforced via `packageManager`) |
-| Framework | SvelteKit 2.52+, Svelte 5.53+ |
-| Bundler | Vite 6.3+ |
-| TypeScript | 5.5+ (strict mode) |
-| CSS | Tailwind CSS 3.4+, PostCSS, autoprefixer |
-| DB | MongoDB 6/7 (or embedded via `mongodb-memory-server`) |
-| Auth | Clerk (fallback: trusted header, anonymous sessions) |
-| LLM | OpenAI-compatible APIs (Hugging Face router, local servers) |
-| Icons | unplugin-icons (Iconify carbon, lucide, bi, eos-icons) |
-| UI primitives | bits-ui |
+| Tool            | Version/Spec                                                |
+| --------------- | ----------------------------------------------------------- |
+| Runtime         | Node.js 20+ (Docker: 22-alpine)                             |
+| Package manager | npm 9.5.0 (enforced via `packageManager`)                   |
+| Framework       | SvelteKit 2.52+, Svelte 5.53+                               |
+| Bundler         | Vite 6.3+                                                   |
+| TypeScript      | 5.5+ (strict mode)                                          |
+| CSS             | Tailwind CSS 3.4+, PostCSS, autoprefixer                    |
+| DB              | MongoDB 6/7 (or embedded via `mongodb-memory-server`)       |
+| Auth            | Clerk (fallback: trusted header, anonymous sessions)        |
+| LLM             | OpenAI-compatible APIs (Hugging Face router, local servers) |
+| Icons           | unplugin-icons (Iconify carbon, lucide, bi, eos-icons)      |
+| UI primitives   | bits-ui                                                     |
 
 ### Constraints
 
@@ -298,11 +301,11 @@ import { dev } from "$app/environment";
 
 ### Test Workspaces
 
-| Workspace | Environment | File pattern | Setup |
-|-----------|-------------|--------------|-------|
-| `client` | Browser (Playwright Chromium) | `src/**/*.svelte.{test,spec}.{js,ts}` | `scripts/setups/vitest-setup-client.ts` |
-| `ssr` | Node.js | `src/**/*.ssr.{test,spec}.{js,ts}` | None |
-| `server` | Node.js | `src/**/*.{test,spec}.{js,ts}` (excludes svelte/ssr) | `scripts/setups/vitest-setup-server.ts` |
+| Workspace | Environment                   | File pattern                                         | Setup                                   |
+| --------- | ----------------------------- | ---------------------------------------------------- | --------------------------------------- |
+| `client`  | Browser (Playwright Chromium) | `src/**/*.svelte.{test,spec}.{js,ts}`                | `scripts/setups/vitest-setup-client.ts` |
+| `ssr`     | Node.js                       | `src/**/*.ssr.{test,spec}.{js,ts}`                   | None                                    |
+| `server`  | Node.js                       | `src/**/*.{test,spec}.{js,ts}` (excludes svelte/ssr) | `scripts/setups/vitest-setup-server.ts` |
 
 The **client** workspace is opt-in via `VITEST_BROWSER=true` because the browser harness can be flaky in CI.
 
@@ -347,32 +350,33 @@ npx vitest --project=server
 
 GitHub Actions workflows (`.github/workflows/`):
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
+| Workflow            | Trigger            | Purpose                                     |
+| ------------------- | ------------------ | ------------------------------------------- |
 | `lint-and-test.yml` | PR, push to `main` | Lint, type check, tests, Docker build check |
-| `build-docs.yml` | Scheduled | Documentation build |
-| `build-image.yml` | PR, push | Docker image build and push |
-| `deploy-dev.yml` | Push to `main` | Dev deployment |
-| `deploy-prod.yml` | Release | Production deployment |
-| `trufflehog.yml` | PR | Secret scanning |
+| `build-docs.yml`    | Scheduled          | Documentation build                         |
+| `build-image.yml`   | PR, push           | Docker image build and push                 |
+| `deploy-dev.yml`    | Push to `main`     | Dev deployment                              |
+| `deploy-prod.yml`   | Release            | Production deployment                       |
+| `trufflehog.yml`    | PR                 | Secret scanning                             |
 
 Pre-commit hooks (`.husky/pre-commit`) run lint-staged: Prettier + ESLint on staged files.
 
 ### Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/config.ts` | Manage app config (env var manipulation) |
-| `scripts/populate.ts` | Seed database with sample data |
-| `scripts/updateLocalEnv.ts` | Update local `.env` files |
+| Script                                  | Purpose                                                                |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| `scripts/config.ts`                     | Manage app config (env var manipulation)                               |
+| `scripts/populate.ts`                   | Seed database with sample data                                         |
+| `scripts/updateLocalEnv.ts`             | Update local `.env` files                                              |
 | `scripts/setups/vitest-setup-server.ts` | Server test setup: load `.env`, mock `$env/*`, start in-memory MongoDB |
-| `scripts/setups/vitest-setup-client.ts` | Client test setup (currently empty stub) |
+| `scripts/setups/vitest-setup-client.ts` | Client test setup (currently empty stub)                               |
 
 ---
 
 ## Quick Reference for AI Assistants
 
 When modifying this codebase:
+
 1. Prefer **Svelte 5 runes** over legacy stores for new components.
 2. Use **`$lib/server/*`** only in server contexts (`+server.ts`, `+page.server.ts`, hooks).
 3. Use **`$lib/types/*`** for shared domain types between client and server.

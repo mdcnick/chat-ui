@@ -4,16 +4,16 @@ import { collections } from "$lib/server/database";
 import { authCondition } from "$lib/server/auth";
 import { requireAuth } from "$lib/server/api/utils/requireAuth";
 import { defaultModel, models, validateModel } from "$lib/server/models";
-import { DEFAULT_SETTINGS, type SettingsEditable } from "$lib/types/Settings";
+import { getDefaultSettings, type SettingsEditable } from "$lib/types/Settings";
 import { resolveStreamingMode } from "$lib/utils/messageUpdates";
 import { z } from "zod";
 
 const settingsSchema = z.object({
 	shareConversationsWithModelAuthors: z
 		.boolean()
-		.default(DEFAULT_SETTINGS.shareConversationsWithModelAuthors),
+		.default(() => getDefaultSettings().shareConversationsWithModelAuthors),
 	welcomeModalSeen: z.boolean().optional(),
-	activeModel: z.string().default(DEFAULT_SETTINGS.activeModel),
+	activeModel: z.string().default(() => getDefaultSettings().activeModel),
 	customPrompts: z.record(z.string()).default({}),
 	customPromptsEnabled: z.record(z.boolean()).default({}),
 	multimodalOverrides: z.record(z.boolean()).default({}),
@@ -32,9 +32,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const settings = await collections.settings.findOne(authCondition(locals));
 
 	if (settings && !validateModel(models).safeParse(settings?.activeModel).success) {
-		settings.activeModel = defaultModel.id;
+		settings.activeModel = defaultModel?.id ?? "";
 		await collections.settings.updateOne(authCondition(locals), {
-			$set: { activeModel: defaultModel.id },
+			$set: { activeModel: defaultModel?.id ?? "" },
 		});
 	}
 
@@ -43,9 +43,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 		settings?.activeModel &&
 		models.find((m) => m.id === settings?.activeModel)?.unlisted === true
 	) {
-		settings.activeModel = defaultModel.id;
+		settings.activeModel = defaultModel?.id ?? "";
 		await collections.settings.updateOne(authCondition(locals), {
-			$set: { activeModel: defaultModel.id },
+			$set: { activeModel: defaultModel?.id ?? "" },
 		});
 	}
 
@@ -55,14 +55,14 @@ export const GET: RequestHandler = async ({ locals }) => {
 		welcomeModalSeen: !!settings?.welcomeModalSeenAt,
 		welcomeModalSeenAt: settings?.welcomeModalSeenAt ?? null,
 
-		activeModel: settings?.activeModel ?? DEFAULT_SETTINGS.activeModel,
+		activeModel: settings?.activeModel ?? getDefaultSettings().activeModel,
 		streamingMode,
-		directPaste: settings?.directPaste ?? DEFAULT_SETTINGS.directPaste,
-		hapticsEnabled: settings?.hapticsEnabled ?? DEFAULT_SETTINGS.hapticsEnabled,
-		hidePromptExamples: settings?.hidePromptExamples ?? DEFAULT_SETTINGS.hidePromptExamples,
+		directPaste: settings?.directPaste ?? getDefaultSettings().directPaste,
+		hapticsEnabled: settings?.hapticsEnabled ?? getDefaultSettings().hapticsEnabled,
+		hidePromptExamples: settings?.hidePromptExamples ?? getDefaultSettings().hidePromptExamples,
 		shareConversationsWithModelAuthors:
 			settings?.shareConversationsWithModelAuthors ??
-			DEFAULT_SETTINGS.shareConversationsWithModelAuthors,
+			getDefaultSettings().shareConversationsWithModelAuthors,
 
 		customPrompts: settings?.customPrompts ?? {},
 		customPromptsEnabled: settings?.customPromptsEnabled ?? {},

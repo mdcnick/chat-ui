@@ -60,14 +60,14 @@
 	<div class="p-6">
 		<!-- Header -->
 		<div class="mb-6">
-			<h2 class="mb-1 text-xl font-semibold text-gray-900 dark:text-gray-200">
+			<h2 class="mb-1 text-xl font-semibold text-card-foreground">
 				{#if currentView === "list"}
 					MCP Servers
 				{:else}
 					Add MCP server
 				{/if}
 			</h2>
-			<p class="text-sm text-gray-600 dark:text-gray-400">
+			<p class="text-sm text-muted-foreground">
 				{#if currentView === "list"}
 					Manage MCP servers to extend {publicConfig.PUBLIC_APP_NAME} with external tools.
 				{:else}
@@ -80,22 +80,22 @@
 		{#if currentView === "list"}
 			<div
 				class="mb-6 flex justify-between rounded-lg p-4 max-sm:flex-col max-sm:gap-4 sm:items-center {!enabledCount
-					? 'bg-gray-100 dark:bg-white/5'
-					: 'bg-blue-50 dark:bg-blue-900/10'}"
+					? 'bg-muted'
+					: 'bg-primary/10'}"
 			>
 				<div class="flex items-center gap-3">
 					<div
-						class="flex size-10 items-center justify-center rounded-xl bg-blue-500/10"
+						class="flex size-10 items-center justify-center rounded-xl bg-primary/10"
 						class:grayscale={!enabledCount}
 					>
-						<IconMCP classNames="size-8 text-blue-600 dark:text-blue-500" />
+						<IconMCP classNames="size-8 text-primary" />
 					</div>
 					<div>
-						<p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+						<p class="text-sm font-semibold text-card-foreground">
 							{$allMcpServers.length}
 							{$allMcpServers.length === 1 ? "server" : "servers"} configured
 						</p>
-						<p class="text-xs text-gray-600 dark:text-gray-400">
+						<p class="text-xs text-muted-foreground">
 							{enabledCount} enabled
 						</p>
 					</div>
@@ -105,14 +105,14 @@
 					<button
 						onclick={handleRefresh}
 						disabled={isRefreshing}
-						class="btn gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+						class="btn gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
 					>
 						<IconRefresh class="size-4 {isRefreshing ? 'animate-spin' : ''}" />
 						{isRefreshing ? "Refreshing…" : "Refresh"}
 					</button>
 					<button
 						onclick={() => (currentView = "add")}
-						class="btn flex items-center gap-0.5 rounded-lg bg-blue-600 py-1.5 pl-2 pr-3 text-sm font-medium text-white hover:bg-blue-600"
+						class="btn flex items-center gap-0.5 rounded-lg bg-primary py-1.5 pl-2 pr-3 text-sm font-medium text-primary-foreground shadow-glow-pink hover:brightness-105"
 					>
 						<IconAddLarge class="size-4" />
 						Add Server
@@ -123,7 +123,7 @@
 				<!-- Base Servers -->
 				{#if baseServers.length > 0}
 					<div>
-						<h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+						<h3 class="mb-3 text-sm font-medium text-muted-foreground">
 							Base Servers ({baseServers.length})
 						</h3>
 						<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -136,23 +136,21 @@
 
 				<!-- Custom Servers -->
 				<div>
-					<h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+					<h3 class="mb-3 text-sm font-medium text-muted-foreground">
 						Custom Servers ({customServers.length})
 					</h3>
 					{#if customServers.length === 0}
 						<div
-							class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-8 dark:border-gray-700"
+							class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-8"
 						>
-							<LucideHammer class="mb-3 size-12 text-gray-400" />
-							<p class="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-								No custom servers yet
-							</p>
-							<p class="mb-4 text-xs text-gray-600 dark:text-gray-400">
+							<LucideHammer class="mb-3 size-12 text-muted-foreground/80" />
+							<p class="mb-1 text-sm font-medium text-card-foreground">No custom servers yet</p>
+							<p class="mb-4 text-xs text-muted-foreground">
 								Add your own MCP servers with custom tools
 							</p>
 							<button
 								onclick={() => (currentView = "add")}
-								class="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+								class="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-glow-pink hover:brightness-105"
 							>
 								<IconAddLarge class="size-4" />
 								Add Your First Server
@@ -168,9 +166,9 @@
 				</div>
 
 				<!-- Help Text -->
-				<div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
-					<h4 class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">💡 Quick Tips</h4>
-					<ul class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+				<div class="rounded-lg bg-muted/40 p-4 dark:bg-muted">
+					<h4 class="mb-2 text-sm font-medium text-card-foreground">💡 Quick Tips</h4>
+					<ul class="space-y-1 text-xs text-muted-foreground">
 						<li>• Only connect to servers you trust</li>
 						<li>• Enable servers to make their tools available in chat</li>
 						<li>• Use the Health Check button to verify server connectivity</li>

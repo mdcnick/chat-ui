@@ -320,185 +320,187 @@
 
 	{#if isOpen}
 		<Portal>
-		<div
-			bind:this={popupEl}
-			class="fixed z-50 w-80 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-			style={popupStyle}
-			role="dialog"
-			aria-label="Model selector"
-		>
-			<div class="flex h-96">
-				<!-- Sidebar -->
-				<div
-					class="flex w-12 flex-col border-r border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-900/50"
-				>
-					<!-- Hugging Face -->
-					<button
-						type="button"
-						class="group relative flex size-10 items-center justify-center rounded-md text-xs transition-colors {activeProvider ===
-						'hf'
-							? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-gray-100'
-							: 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300'}"
-						onclick={() => {
-							activeProvider = "hf";
-							highlightedIndex = 0;
-						}}
-						title="Hugging Face · {getModelCountForProvider('hf')}"
-					>
-						{#if activeProvider === "hf"}
-							<div
-								class="absolute right-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-l bg-gray-900 dark:bg-gray-100"
-							></div>
-						{/if}
-						<img src={getHfAvatarUrl()} alt="Hugging Face" class="size-5 rounded-sm" />
-					</button>
-
-					<!-- OpenCode -->
-					<button
-						type="button"
-						class="group relative flex size-10 items-center justify-center rounded-md text-xs transition-colors {activeProvider ===
-						'opencode'
-							? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-gray-100'
-							: 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300'}"
-						onclick={() => {
-							activeProvider = "opencode";
-							highlightedIndex = 0;
-						}}
-						title="OpenCode · {getModelCountForProvider('opencode')}"
-					>
-						{#if activeProvider === "opencode"}
-							<div
-								class="absolute right-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-l bg-gray-900 dark:bg-gray-100"
-							></div>
-						{/if}
-					{#if opencodeAvatarUrl}
-						<img src={opencodeAvatarUrl} alt="OpenCode" class="size-5 rounded-sm" />
-						{:else}
-							<span class="text-[10px] font-semibold uppercase">OC</span>
-						{/if}
-					</button>
-				</div>
-
-				<!-- Main content -->
-				<div class="flex min-w-0 flex-1 flex-col">
-					<!-- Search -->
+			<div
+				bind:this={popupEl}
+				class="fixed z-50 w-80 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+				style={popupStyle}
+				role="dialog"
+				aria-label="Model selector"
+			>
+				<div class="flex h-96">
+					<!-- Sidebar -->
 					<div
-						class="flex items-center gap-2 border-b border-gray-200 px-3 py-2 dark:border-gray-700"
+						class="flex w-12 flex-col border-r border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-900/50"
 					>
-						<CarbonSearch class="size-4 flex-none text-gray-400 dark:text-gray-500" />
-						<input
-							bind:this={searchInputEl}
-							bind:value={modelFilter}
-							type="search"
-							placeholder="Search models..."
-							aria-label="Search models"
-							class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500"
-						/>
+						<!-- Hugging Face -->
+						<button
+							type="button"
+							class="group relative flex size-10 items-center justify-center rounded-md text-xs transition-colors {activeProvider ===
+							'hf'
+								? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-gray-100'
+								: 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300'}"
+							onclick={() => {
+								activeProvider = "hf";
+								highlightedIndex = 0;
+							}}
+							title="Hugging Face · {getModelCountForProvider('hf')}"
+						>
+							{#if activeProvider === "hf"}
+								<div
+									class="absolute right-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-l bg-gray-900 dark:bg-gray-100"
+								></div>
+							{/if}
+							<img src={getHfAvatarUrl()} alt="Hugging Face" class="size-5 rounded-sm" />
+						</button>
+
+						<!-- OpenCode -->
+						<button
+							type="button"
+							class="group relative flex size-10 items-center justify-center rounded-md text-xs transition-colors {activeProvider ===
+							'opencode'
+								? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-gray-100'
+								: 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-300'}"
+							onclick={() => {
+								activeProvider = "opencode";
+								highlightedIndex = 0;
+							}}
+							title="OpenCode · {getModelCountForProvider('opencode')}"
+						>
+							{#if activeProvider === "opencode"}
+								<div
+									class="absolute right-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-l bg-gray-900 dark:bg-gray-100"
+								></div>
+							{/if}
+							{#if opencodeAvatarUrl}
+								<img src={opencodeAvatarUrl} alt="OpenCode" class="size-5 rounded-sm" />
+							{:else}
+								<span class="text-[10px] font-semibold uppercase">OC</span>
+							{/if}
+						</button>
 					</div>
 
-					<!-- Model list -->
-					<div
-						bind:this={listEl}
-						class="scrollbar-custom flex-1 overflow-y-auto p-1"
-						role="listbox"
-						aria-label="Models"
-					>
-						{#if filteredModels.length}
-							{#each filteredModels as model, index (model.id)}
-								{@const isActive = model.id === currentModel.id}
-								{@const isHighlighted = index === highlightedIndex}
-								<div
-									role="option"
-									aria-selected={isActive}
-									tabindex={isHighlighted ? 0 : -1}
-									class="group flex w-full cursor-pointer items-start gap-2 rounded-md px-2 py-2 text-left transition-colors {isHighlighted
-										? 'bg-gray-100 dark:bg-gray-700/50'
-										: ''} {isActive
-										? 'bg-gray-50 dark:bg-gray-700/30'
-										: 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}"
-									onclick={() => selectModel(model)}
-									onkeydown={(event) => {
-										if (event.key === "Enter" || event.key === " ") {
-											event.preventDefault();
-											selectModel(model);
-										}
-									}}
-									onfocus={() => (highlightedIndex = index)}
-									onmouseenter={() => (highlightedIndex = index)}
-								>
-									<!-- Favorite star -->
-									<button
-										type="button"
-										class="mt-0.5 flex-none opacity-0 transition-opacity group-hover:opacity-100 {favorites.has(
-											model.id
-										)
-											? 'opacity-100'
-											: ''}"
-										onclick={(e) => toggleFavorite(model.id, e)}
-										aria-label={favorites.has(model.id)
-											? "Remove from favorites"
-											: "Add to favorites"}
-									>
-										{#if favorites.has(model.id)}
-											<LucideStar class="size-3.5 fill-yellow-500 text-yellow-500" />
-										{:else}
-											<LucideStarOff class="size-3.5 text-gray-400 dark:text-gray-500" />
-										{/if}
-									</button>
+					<!-- Main content -->
+					<div class="flex min-w-0 flex-1 flex-col">
+						<!-- Search -->
+						<div
+							class="flex items-center gap-2 border-b border-gray-200 px-3 py-2 dark:border-gray-700"
+						>
+							<CarbonSearch class="size-4 flex-none text-gray-400 dark:text-gray-500" />
+							<input
+								bind:this={searchInputEl}
+								bind:value={modelFilter}
+								type="search"
+								placeholder="Search models..."
+								aria-label="Search models"
+								class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500"
+							/>
+						</div>
 
-									<!-- Model icon -->
+						<!-- Model list -->
+						<div
+							bind:this={listEl}
+							class="scrollbar-custom flex-1 overflow-y-auto p-1"
+							role="listbox"
+							aria-label="Models"
+						>
+							{#if filteredModels.length}
+								{#each filteredModels as model, index (model.id)}
+									{@const isActive = model.id === currentModel.id}
+									{@const isHighlighted = index === highlightedIndex}
 									<div
-										class="mt-0.5 flex size-7 flex-none items-center justify-center overflow-hidden rounded-md bg-gray-100 dark:bg-gray-700"
+										role="option"
+										aria-selected={isActive}
+										tabindex={isHighlighted ? 0 : -1}
+										class="group flex w-full cursor-pointer items-start gap-2 rounded-md px-2 py-2 text-left transition-colors {isHighlighted
+											? 'bg-gray-100 dark:bg-gray-700/50'
+											: ''} {isActive
+											? 'bg-gray-50 dark:bg-gray-700/30'
+											: 'hover:bg-gray-50 dark:hover:bg-gray-700/30'}"
+										onclick={() => selectModel(model)}
+										onkeydown={(event) => {
+											if (event.key === "Enter" || event.key === " ") {
+												event.preventDefault();
+												selectModel(model);
+											}
+										}}
+										onfocus={() => (highlightedIndex = index)}
+										onmouseenter={() => (highlightedIndex = index)}
 									>
-										{#if model.logoUrl}
-											<img src={model.logoUrl} alt="" class="size-full object-cover" />
-										{:else}
-											<span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300"
-												>{model.displayName.slice(0, 1).toUpperCase()}</span
-											>
-										{/if}
-									</div>
+										<!-- Favorite star -->
+										<button
+											type="button"
+											class="mt-0.5 flex-none opacity-0 transition-opacity group-hover:opacity-100 {favorites.has(
+												model.id
+											)
+												? 'opacity-100'
+												: ''}"
+											onclick={(e) => toggleFavorite(model.id, e)}
+											aria-label={favorites.has(model.id)
+												? "Remove from favorites"
+												: "Add to favorites"}
+										>
+											{#if favorites.has(model.id)}
+												<LucideStar class="size-3.5 fill-yellow-500 text-yellow-500" />
+											{:else}
+												<LucideStarOff class="size-3.5 text-gray-400 dark:text-gray-500" />
+											{/if}
+										</button>
 
-									<!-- Model info -->
-									<div class="min-w-0 flex-1">
-										<div class="flex items-center gap-1.5">
-											<span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100"
-												>{model.displayName}</span
-											>
-											{#if isActive}
-												<CarbonCheckmark
-													class="size-3.5 flex-none text-gray-900 dark:text-gray-100"
-												/>
+										<!-- Model icon -->
+										<div
+											class="mt-0.5 flex size-7 flex-none items-center justify-center overflow-hidden rounded-md bg-gray-100 dark:bg-gray-700"
+										>
+											{#if model.logoUrl}
+												<img src={model.logoUrl} alt="" class="size-full object-cover" />
+											{:else}
+												<span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300"
+													>{model.displayName.slice(0, 1).toUpperCase()}</span
+												>
 											{/if}
 										</div>
-										<p class="truncate text-xs text-gray-500 dark:text-gray-400">
-											{modelDescription(model)}
-										</p>
-									</div>
 
-									<!-- Capability badges -->
-									<div class="flex flex-none items-center gap-1">
-										{#if supportsTools(model)}
-											<LucideHammer class="size-3 text-purple-500" title="Tool calling" />
-										{/if}
-										{#if supportsMultimodal(model)}
-											<LucideImage class="size-3 text-sky-500" title="Multimodal" />
-										{/if}
+										<!-- Model info -->
+										<div class="min-w-0 flex-1">
+											<div class="flex items-center gap-1.5">
+												<span class="truncate text-sm font-medium text-gray-900 dark:text-gray-100"
+													>{model.displayName}</span
+												>
+												{#if isActive}
+													<CarbonCheckmark
+														class="size-3.5 flex-none text-gray-900 dark:text-gray-100"
+													/>
+												{/if}
+											</div>
+											<p class="truncate text-xs text-gray-500 dark:text-gray-400">
+												{modelDescription(model)}
+											</p>
+										</div>
+
+										<!-- Capability badges -->
+										<div class="flex flex-none items-center gap-1">
+											{#if supportsTools(model)}
+												<LucideHammer class="size-3 text-purple-500" title="Tool calling" />
+											{/if}
+											{#if supportsMultimodal(model)}
+												<LucideImage class="size-3 text-sky-500" title="Multimodal" />
+											{/if}
+										</div>
 									</div>
+								{/each}
+							{:else}
+								<div class="flex h-full flex-col items-center justify-center px-4 text-center">
+									<p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+										No models found
+									</p>
+									<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+										Try a different search term or switch providers
+									</p>
 								</div>
-							{/each}
-						{:else}
-							<div class="flex h-full flex-col items-center justify-center px-4 text-center">
-								<p class="text-sm font-medium text-gray-900 dark:text-gray-100">No models found</p>
-								<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-									Try a different search term or switch providers
-								</p>
-							</div>
-						{/if}
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 		</Portal>
 	{/if}
 </div>

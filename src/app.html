@@ -6,7 +6,7 @@
 			name="viewport"
 			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 		/>
-<meta name="theme-color" content="#f9eaf2" />
+		<meta name="theme-color" content="#f9eaf2" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -22,7 +22,7 @@
 					var isDark = stored === "dark" || (followSystem && prefersDark);
 					if (isDark) {
 						document.documentElement.classList.add("dark");
-document.querySelector('meta[name="theme-color"]').setAttribute("content", "#221d27");
+						document.querySelector('meta[name="theme-color"]').setAttribute("content", "#221d27");
 					}
 				} catch (e) {}
 			})();
@@ -32,7 +32,7 @@ document.querySelector('meta[name="theme-color"]').setAttribute("content", "#221
 		</script>
 		%sveltekit.head%
 	</head>
-<body data-sveltekit-preload-data="hover" class="h-dvh bg-background text-foreground">
+	<body data-sveltekit-preload-data="hover" class="h-dvh bg-background text-foreground">
 		<div id="app" class="contents h-full">%sveltekit.body%</div>
 
 		<!-- Google Tag Manager -->

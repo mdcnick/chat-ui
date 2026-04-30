@@ -107,10 +107,7 @@
 <div class="space-y-4">
 	<!-- Server Name -->
 	<div>
-		<label
-			for="server-name"
-			class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-		>
+		<label for="server-name" class="mb-1 block text-sm font-medium text-muted-foreground">
 			Server Name <span class="text-red-500">*</span>
 		</label>
 		<input
@@ -118,13 +115,13 @@
 			type="text"
 			bind:value={name}
 			placeholder="My MCP Server"
-			class="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+			class="mt-1.5 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground"
 		/>
 	</div>
 
 	<!-- Server URL -->
 	<div>
-		<label for="server-url" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+		<label for="server-url" class="mb-1 block text-sm font-medium text-muted-foreground">
 			Server URL <span class="text-red-500">*</span>
 		</label>
 		<input
@@ -132,41 +129,38 @@
 			type="url"
 			bind:value={url}
 			placeholder="https://example.com/mcp"
-			class="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+			class="mt-1.5 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground"
 		/>
-		<!-- <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-			Only HTTPS is supported (e.g., https://localhost:5101).
-		</p> -->
 	</div>
 
 	<!-- HTTP Headers -->
-	<details class="rounded-lg border border-gray-200 dark:border-gray-700">
-		<summary class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+	<details class="rounded-lg border border-border">
+		<summary class="cursor-pointer px-4 py-2 text-sm font-medium text-muted-foreground">
 			HTTP Headers (Optional)
 		</summary>
-		<div class="space-y-2 border-t border-gray-200 p-4 dark:border-gray-700">
+		<div class="space-y-2 border-t border-border p-4">
 			{#if headers.length === 0}
-				<p class="text-sm text-gray-500 dark:text-gray-400">No headers configured</p>
+				<p class="text-sm text-muted-foreground">No headers configured</p>
 			{:else}
 				{#each headers as header, i}
 					<div class="flex gap-2">
 						<input
 							bind:value={header.key}
 							placeholder="Header name (e.g., Authorization)"
-							class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+							class="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground"
 						/>
 						<div class="relative flex-1">
 							<input
 								bind:value={header.value}
 								type={showHeaderValues[i] ? "text" : "password"}
 								placeholder="Value"
-								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-10 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+								class="w-full rounded-lg border border-input bg-card px-3 py-2 pr-10 text-sm text-foreground"
 							/>
 							{#if isSensitiveHeader(header.key)}
 								<button
 									type="button"
 									onclick={() => toggleHeaderVisibility(i)}
-									class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+									class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"
 									title={showHeaderValues[i] ? "Hide value" : "Show value"}
 								>
 									{#if showHeaderValues[i]}
@@ -180,7 +174,7 @@
 						<button
 							type="button"
 							onclick={() => removeHeader(i)}
-							class="rounded-lg bg-red-100 p-2 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+							class="rounded-lg bg-destructive/10 p-2 text-destructive hover:bg-destructive/20"
 							title="Remove header"
 						>
 							<IconTrash class="size-4" />
@@ -192,20 +186,18 @@
 			<button
 				type="button"
 				onclick={addHeader}
-				class="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+				class="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent dark:bg-muted dark:text-muted-foreground dark:hover:bg-accent"
 			>
 				<IconAdd class="size-4" />
 				Add Header
 			</button>
 
-			<p class="text-xs text-gray-500 dark:text-gray-400">
+			<p class="text-xs text-muted-foreground">
 				Common examples:<br />
 				• Bearer token:
-				<code class="rounded bg-gray-100 px-1 dark:bg-gray-700"
-					>Authorization: Bearer YOUR_TOKEN</code
-				><br />
+				<code class="rounded bg-muted px-1">Authorization: Bearer YOUR_TOKEN</code><br />
 				• API key:
-				<code class="rounded bg-gray-100 px-1 dark:bg-gray-700">X-API-Key: YOUR_KEY</code>
+				<code class="rounded bg-muted px-1">X-API-Key: YOUR_KEY</code>
 			</p>
 		</div>
 	</details>
@@ -229,9 +221,7 @@
 
 	<!-- Error message -->
 	{#if error}
-		<div
-			class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
-		>
+		<div class="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
 			<p class="text-sm text-red-800 dark:text-red-200">{error}</p>
 		</div>
 	{/if}
@@ -241,14 +231,14 @@
 		<button
 			type="button"
 			onclick={oncancel}
-			class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+			class="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent dark:bg-muted dark:text-muted-foreground dark:hover:bg-accent"
 		>
 			Cancel
 		</button>
 		<button
 			type="button"
 			onclick={handleSubmit}
-			class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+			class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-glow-pink hover:brightness-105"
 		>
 			{submitLabel}
 		</button>

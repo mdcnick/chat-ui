@@ -11,7 +11,8 @@ export async function resolveModel(namespace: string, model?: string) {
 	}
 
 	try {
-		const { models } = await import("$lib/server/models");
+		const { models, modelsReady } = await import("$lib/server/models");
+		await modelsReady;
 		const found = models.find((m) => m.id === modelId);
 		if (!found || found.unlisted) {
 			error(404, "Model not found");

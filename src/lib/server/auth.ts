@@ -34,6 +34,9 @@ export function sanitizeReturnPath(path: string | undefined | null): string | un
 	if (!path.startsWith("/")) {
 		return undefined;
 	}
+	if (path.startsWith(`${base}/login`) || path.startsWith(`${base}/register`) || path.startsWith(`${base}/recovery`)) {
+		return undefined;
+	}
 	return path;
 }
 

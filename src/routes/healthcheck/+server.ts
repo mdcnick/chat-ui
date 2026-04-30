@@ -1,5 +1,5 @@
 import { Database } from "$lib/server/database";
-import { models, lastModelRefresh } from "$lib/server/models";
+import { models, lastModelRefresh, modelsReady } from "$lib/server/models";
 import { getMcpServers } from "$lib/server/mcp/registry";
 import { logger } from "$lib/server/logger";
 
@@ -24,10 +24,18 @@ export async function GET() {
 	}
 
 	// Model cache freshness
+	const isModelLoadComplete = !!(await Promise.race([
+		modelsReady.then(() => true),
+		new Promise<false>((r) => setTimeout(() => r(false), 0)),
+	]));
 	diagnostics.modelCache = {
 		modelCount: models.length,
 		lastRefreshMs: Date.now() - lastModelRefresh.getTime(),
+		ready: isModelLoadComplete,
 	};
+	if (!isModelLoadComplete && models.length === 0) {
+		diagnostics.status = "initializing";
+	}
 
 	// MCP servers
 	const mcpServers = getMcpServers();
@@ -36,6 +44,7 @@ export async function GET() {
 	};
 
 	return Response.json(diagnostics, {
-		status: diagnostics.status === "healthy" ? 200 : 503,
+		status:
+			diagnostics.status === "healthy" ? 200 : diagnostics.status === "initializing" ? 200 : 503,
 	});
 }

@@ -20,14 +20,13 @@
 	import NavConversationItem from "./NavConversationItem.svelte";
 	import type { LayoutData } from "../../routes/$types";
 	import type { ConvSidebar } from "$lib/types/ConvSidebar";
-	import type { Model } from "$lib/types/Model";
 	import { page } from "$app/state";
 	import InfiniteScroll from "./InfiniteScroll.svelte";
 	import { CONV_NUM_PER_PAGE } from "$lib/constants/pagination";
 	import { browser } from "$app/environment";
 	import { usePublicConfig } from "$lib/utils/PublicConfig.svelte";
 	import { useAPIClient, handleResponse } from "$lib/APIClient";
-	import { requireAuthUser } from "$lib/utils/auth";
+	import { getLoginUrl, requireAuthUser } from "$lib/utils/auth";
 	import { enabledServersCount } from "$lib/stores/mcpServers";
 	import { isPro } from "$lib/stores/isPro";
 	import IconPro from "$lib/components/icons/IconPro.svelte";
@@ -85,8 +84,6 @@
 		),
 		older: conversations.filter(({ updatedAt }) => updatedAt.getTime() < dateRanges[2]),
 	});
-
-	const nModels: number = page.data.models.filter((el: Model) => !el.unlisted).length;
 
 	async function handleVisible() {
 		p++;
@@ -187,7 +184,7 @@
 		></span>
 		<span class="relative">New Chat</span>
 		<kbd
-			class="relative ml-auto hidden rounded-md bg-white/15 px-1.5 py-px text-[10px] font-mono tracking-wide text-primary-foreground/90 sm:inline-flex"
+			class="relative ml-auto hidden rounded-md bg-white/15 px-1.5 py-px font-mono text-[10px] tracking-wide text-primary-foreground/90 sm:inline-flex"
 			>⌘⇧O</kbd
 		>
 	</a>
@@ -291,7 +288,7 @@
 				Create a free account to keep your conversations across devices.
 			</div>
 			<a
-				href="{base}/login?next={encodeURIComponent(page.url.pathname + page.url.search)}"
+				href={getLoginUrl(page.url.pathname, page.url.search)}
 				class="mt-3 flex h-9 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-glow-pink transition-all hover:translate-y-[-1px] hover:brightness-105"
 			>
 				Continue
@@ -301,18 +298,6 @@
 </div>
 
 <div class="flex touch-none flex-col gap-0.5 px-3 pb-3 text-sm">
-	<a
-		href="{base}/models"
-		class="flex h-9 flex-none items-center gap-1.5 rounded-xl px-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:h-[2.08rem]"
-		onclick={handleNavItemClick}
-	>
-		Models
-		<span
-			class="ml-auto rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary"
-			>{nModels}</span
-		>
-	</a>
-
 	{#if user?.username || user?.email}
 		<button
 			onclick={() => (showMcpModal = true)}
